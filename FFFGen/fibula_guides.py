@@ -112,7 +112,6 @@ def create_obj_boolean_union(objects_cutting_planes):
         modifier_boolean.operation = "UNION"
         modifier_boolean.object = objects_planes_geometry[i]
         bpy.ops.object.modifier_apply(
-            apply_as="DATA",
             modifier=modifier_boolean.name
         )
 
@@ -164,7 +163,6 @@ def create_obj_boolean_difference(objects_cutting_planes):
         modifier_union.operation = "UNION"
         modifier_union.object = objects_planes_difference[i]
         bpy.ops.object.modifier_apply(
-            apply_as="DATA",
             modifier=modifier_union.name
         )
     

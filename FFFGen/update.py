@@ -133,7 +133,6 @@ def update_duplis():
         # apply modifiers to obj_fibula_dupli
         bpy.context.view_layer.objects.active = obj_fibula_dupli
         bpy.ops.object.modifier_apply(
-            apply_as="DATA",
             modifier=obj_fibula_dupli.modifiers[0].name
         )
         # remove constraints from dupli and reset location and rotation

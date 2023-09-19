@@ -183,6 +183,7 @@ def setup_cutting_planes(cutting_plane_start_orig, cutting_plane_end_orig, armat
             )
             constraint_child_of.target = armature
             constraint_child_of.subtarget = bone.name
+            bpy.ops.constraint.childof_clear_inverse(constraint=constraint_child_of.name, owner="OBJECT")
             cutting_plane_dupli.select_set(False)
             bpy.context.view_layer.objects.active = None
 
