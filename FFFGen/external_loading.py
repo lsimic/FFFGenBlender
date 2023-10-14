@@ -69,3 +69,19 @@ def load_boolean_cube():
     obj_boolean_cube = data_to.objects[0]
     bpy.context.scene.collection.objects.link(obj_boolean_cube)
     return obj_boolean_cube
+
+
+def load_positioning_aid_objects():
+    # loads the objects needed to construct the positioning aid
+    # they are stored in the file with correct names...
+    directory = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(directory, "positioning_aid.blend")
+
+    with bpy.data.libraries.load(file_path, link=False) as (data_from, data_to):
+        data_to.objects = [name for name in data_from.objects]
+
+    for obj in data_to.objects:
+        if obj is not None:
+            bpy.context.scene.collection.objects.link(obj)
+
+    return

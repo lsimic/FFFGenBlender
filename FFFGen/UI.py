@@ -115,6 +115,7 @@ class FFFGenGuidesPanel(Panel):
                 box.operator("fff_gen.create_fibula_screw", text="Create Fibula guide screw")
 
         if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES):
+            layout.prop(properties, "positioning_aid_toggle")
             box = layout.box()
             box.label(text="Mandible Guides:")
             if not len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
@@ -123,8 +124,18 @@ class FFFGenGuidesPanel(Panel):
             else:
                 box.operator("fff_gen.create_mandible_start_screw", text="Create Mandible Start Screw")
                 box.operator("fff_gen.create_mandible_end_screw", text="Create Mandible End Screw")
-                box.operator("fff_gen.join_mandible_guides", text="Join mandible guides")
-
+                if properties.positioning_aid_toggle == "GUIDE":
+                    if not "joined_mandible_guide" in bpy.data.objects.keys():
+                        box.operator("fff_gen.join_mandible_guides", text="Join mandible guides")
+                else:
+                    # try to find the positioning aid object
+                    # if found - it is initialized
+                    # otherwise - it is not initialized and show the button to do so.
+                    if not "positioning_aid_mesh" in bpy.data.objects.keys():
+                        box.operator("fff_gen.create_mandible_positioning_aid", text="Create positioning aid")
+                    else:
+                        positioning_aid_obj = bpy.data.objects["positioning_aid_mesh"]
+                        # TODO: (Luka) property to adjust scale/thickness
 
 class FFFGenDangerPanel(Panel):
     bl_idname = "FFF_GEN_PT_danger"
@@ -144,8 +155,12 @@ class FFFGenDangerPanel(Panel):
                 col.operator("fff_gen.clear_fibula_guides", text="Clear Fibula Guides")
         
         if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES):
-            if len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
-                col.operator("fff_gen.clear_mandible_guides", text="Clear Mandible Guides")
+            if properties.positioning_aid_toggle == "GUIDE":
+                if len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
+                    col.operator("fff_gen.clear_mandible_guides", text="Clear Mandible Guides")
+            else:
+                if "positioning_aid_mesh" in bpy.data.objects.keys():
+                    col.operator("fff_gen.clear_mandible_positioning_aid", text="Clear positioning aid")
         
         if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_POSITIONING):
             if len(bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_FIBULA].objects):
