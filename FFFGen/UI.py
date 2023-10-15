@@ -134,8 +134,10 @@ class FFFGenGuidesPanel(Panel):
                     if not "positioning_aid_mesh" in bpy.data.objects.keys():
                         box.operator("fff_gen.create_mandible_positioning_aid", text="Create positioning aid")
                     else:
-                        positioning_aid_obj = bpy.data.objects["positioning_aid_mesh"]
-                        # TODO: (Luka) property to adjust scale/thickness
+                        # Property to adjust scale/thickness
+                        box.prop(properties, "positioning_aid_size_x")
+                        box.prop(properties, "positioning_aid_size_z")
+
 
 class FFFGenDangerPanel(Panel):
     bl_idname = "FFF_GEN_PT_danger"

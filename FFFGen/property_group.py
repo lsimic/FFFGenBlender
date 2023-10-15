@@ -174,3 +174,43 @@ class FFFGenPropertyGroup(PropertyGroup):
         default="GUIDE",
         update=positioning_aid_toggle_update
     )
+
+    def positioning_aid_size_x_set_val(self, value):
+        if "positioning_aid_mesh" in bpy.data.objects.keys():
+            obj = bpy.data.objects["positioning_aid_mesh"]
+            obj.scale[0] = value
+
+    def positioning_aid_size_z_set_val(self, value):
+        if "positioning_aid_mesh" in bpy.data.objects.keys():
+            obj = bpy.data.objects["positioning_aid_mesh"]
+            obj.scale[2] = value
+
+    def positioning_aid_size_x_get_val(self):
+        if "positioning_aid_mesh" in bpy.data.objects.keys():
+            obj = bpy.data.objects["positioning_aid_mesh"]
+            return obj.scale[0]
+        return 0.0
+    
+    def positioning_aid_size_z_get_val(self):
+        if "positioning_aid_mesh" in bpy.data.objects.keys():
+            obj = bpy.data.objects["positioning_aid_mesh"]
+            return obj.scale[2]
+        return 0.0
+
+    # NOTE: z and x (height and width) are swapped here due to how the mesh is deformed by the spline.
+
+    positioning_aid_size_z: FloatProperty(
+        name="Positioning aid width",
+        default=0.2,
+        description="Thickness of the positioning aid (in Z direction)",
+        get = positioning_aid_size_z_get_val,
+        set = positioning_aid_size_z_set_val
+    )
+
+    positioning_aid_size_x: FloatProperty(
+        name="Positioning aid height",
+        default=0.2,
+        description="Thickness of the positioning aid (in X direction)",
+        get = positioning_aid_size_x_get_val,
+        set = positioning_aid_size_x_set_val
+    )
