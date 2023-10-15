@@ -344,9 +344,22 @@ class CreateMandiblePositioningAid(bpy.types.Operator):
         obj_positioning_aid_curve_handle_start.matrix_world = pos_aid_matrix_start
         obj_positioning_aid_curve_handle_end.matrix_world = pos_aid_matrix_end
 
-        # TODO: (Luka) add boolean modifiers with the mandible objects where necessary...
-        # for start/end and possibly mesh object.
+        # add boolean modifiers with the mandible objects where necessary (for start and end of positioning aid)
         # the rest of the booleans to merge the positioning aid together already exist on the curve object.
+        modifier_difference_start = obj_positioning_aid_start.modifiers.new(
+            name="boolean_difference_mandible",
+            type="BOOLEAN"
+        )
+        modifier_difference_start.operation = "DIFFERENCE"
+        modifier_difference_start.object = bpy.context.scene.FFFGenPropertyGroup.mandible_object
+        
+        modifier_difference_end = obj_positioning_aid_end.modifiers.new(
+            name="boolean_difference_mandible",
+            type="BOOLEAN"
+        )
+        modifier_difference_end.operation = "DIFFERENCE"
+        modifier_difference_end.object = bpy.context.scene.FFFGenPropertyGroup.mandible_object
+
 
         # TODO: (Luka) add constraint, copy location, y axis, both target and owner in local_space. 
         # this makes sure that the positioning aid will remain aligned with the guide when translated.
