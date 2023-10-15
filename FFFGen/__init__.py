@@ -29,6 +29,7 @@ from . import cutting_planes
 from . import fibula_guides
 from . import mandible_guides
 from . import clear
+from . import load_handler
 
 
 bl_info = {
@@ -69,9 +70,11 @@ def register():
     bpy.utils.register_class(UI.FFFGenGuidesPanel)
     bpy.utils.register_class(UI.FFFGenDangerPanel)
     bpy.utils.register_class(UI.FFFGenColorPanel)
+    bpy.app.handlers.load_post.append(load_handler.on_load_post_handler)
 
 
 def unregister():
+    bpy.app.handlers.load_post.remove(load_handler.on_load_post_handler)
     del bpy.types.Scene.FFFGenPropertyGroup
     bpy.utils.unregister_class(property_group.FFFGenPropertyGroup)
     bpy.utils.unregister_class(initialize_addon.InitializeAddon)
@@ -95,3 +98,4 @@ def unregister():
     bpy.utils.unregister_class(UI.FFFGenGuidesPanel)
     bpy.utils.unregister_class(UI.FFFGenDangerPanel)
     bpy.utils.unregister_class(UI.FFFGenColorPanel)
+
