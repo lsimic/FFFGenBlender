@@ -188,3 +188,30 @@ class FFFGenColorPanel(Panel):
                     row = layout.row()
                     row.prop(obj.data.materials[0], "diffuse_color")
 
+
+class FFFGenExportPanel(Panel):
+    bl_idname = "FFF_GEN_PT_export"
+    bl_label = "Export"
+    bl_category = "FFF Gen"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        layout = self.layout
+        properties = context.scene.FFFGenPropertyGroup
+        
+        sub = layout.row() # fibula guide checkbox
+        sub.enabled = ("fibula_guide" in bpy.data.objects.keys())
+        sub.prop(properties, "export_toggle_fibula_guide")
+        
+        sub = layout.row() # mandible guide checkbox
+        sub.enabled = ("joined_mandible_guide" in bpy.data.objects.keys())
+        sub.prop(properties, "export_toggle_mandible_guide")
+        
+        sub = layout.row() # mandible positioning aid checkbox
+        sub.enabled = ("positioning_aid_mesh" in bpy.data.objects.keys())
+        sub.prop(properties, "export_toggle_mandible_aid")
+
+        layout.prop(properties, "export_dir_path") # file path
+        layout.operator("fff_gen.export_guides", text="Export") # export button

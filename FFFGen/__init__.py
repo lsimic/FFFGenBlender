@@ -30,6 +30,7 @@ from . import fibula_guides
 from . import mandible_guides
 from . import clear
 from . import load_handler
+from . import export_guides
 
 
 bl_info = {
@@ -61,6 +62,7 @@ def register():
     bpy.utils.register_class(mandible_guides.CreateMandibleEndScrew)
     bpy.utils.register_class(mandible_guides.JoinMandibleGuides)
     bpy.utils.register_class(mandible_guides.CreateMandiblePositioningAid)
+    bpy.utils.register_class(export_guides.ExportGuides)
     bpy.utils.register_class(clear.ClearMandibleGuides)
     bpy.utils.register_class(clear.ClearFibulaGuides)
     bpy.utils.register_class(clear.ClearCuttingPlanes)
@@ -70,6 +72,7 @@ def register():
     bpy.utils.register_class(UI.FFFGenGuidesPanel)
     bpy.utils.register_class(UI.FFFGenDangerPanel)
     bpy.utils.register_class(UI.FFFGenColorPanel)
+    bpy.utils.register_class(UI.FFFGenExportPanel)
     bpy.app.handlers.load_post.append(load_handler.on_load_post_handler)
 
 
@@ -89,6 +92,7 @@ def unregister():
     bpy.utils.unregister_class(mandible_guides.CreateMandibleEndScrew)
     bpy.utils.unregister_class(mandible_guides.JoinMandibleGuides)
     bpy.utils.unregister_class(mandible_guides.CreateMandiblePositioningAid)
+    bpy.utils.unregister_class(export_guides.ExportGuides)
     bpy.utils.unregister_class(clear.ClearMandibleGuides)
     bpy.utils.unregister_class(clear.ClearFibulaGuides)
     bpy.utils.unregister_class(clear.ClearCuttingPlanes)
@@ -98,4 +102,5 @@ def unregister():
     bpy.utils.unregister_class(UI.FFFGenGuidesPanel)
     bpy.utils.unregister_class(UI.FFFGenDangerPanel)
     bpy.utils.unregister_class(UI.FFFGenColorPanel)
+    bpy.utils.unregister_class(UI.FFFGenExportPanel)
 

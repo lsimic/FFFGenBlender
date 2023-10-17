@@ -214,3 +214,29 @@ class FFFGenPropertyGroup(PropertyGroup):
         get = positioning_aid_size_x_get_val,
         set = positioning_aid_size_x_set_val
     )
+
+    export_dir_path: StringProperty(
+        name="Export directory",
+        description="Export directory where guide 3D models will be exported",
+        default="",
+        maxlen=1023,
+        subtype="DIR_PATH"
+    )
+
+    export_toggle_fibula_guide: BoolProperty(
+        name="Export Fibula Guide",
+        description="Whether to export the fibula guide",
+        default=True
+    )
+
+    export_toggle_mandible_guide: BoolProperty(
+        name="Export Mandible Guide",
+        description="Whether to export the mandible guide",
+        default=True
+    )
+
+    export_toggle_mandible_aid: BoolProperty(
+        name="Export Positioning Aid",
+        description="Whether to export the mandible positioning aid",
+        default=True
+    )
