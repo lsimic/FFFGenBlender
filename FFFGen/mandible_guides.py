@@ -211,8 +211,8 @@ class CreateMandibleStartScrew(bpy.types.Operator):
 
     def invoke(self, context, event):
         mandible_guide_start = bpy.data.objects["mandible_guide_start"]
-        if "mandible_positioning_aid_start" in bpy.data.objects.keys():
-            mandible_positioning_aid = bpy.data.objects["mandible_positioning_aid_start"]
+        if "positioning_aid_start" in bpy.data.objects.keys():
+            mandible_positioning_aid = bpy.data.objects["positioning_aid_start"]
         else:
             mandible_positioning_aid = None
         create_mandible_screw(mandible_guide_start, mandible_positioning_aid, "start")
@@ -226,8 +226,8 @@ class CreateMandibleEndScrew(bpy.types.Operator):
 
     def invoke(self, context, event):
         mandible_guide_end = bpy.data.objects["mandible_guide_end"]
-        if "mandible_positioning_aid_end" in bpy.data.objects.keys():
-            mandible_positioning_aid = bpy.data.objects["mandible_positioning_aid_end"]
+        if "positioning_aid_end" in bpy.data.objects.keys():
+            mandible_positioning_aid = bpy.data.objects["positioning_aid_end"]
         else:
             mandible_positioning_aid = None
         create_mandible_screw(mandible_guide_end, mandible_positioning_aid, "end")
