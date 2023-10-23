@@ -240,3 +240,11 @@ class FFFGenPropertyGroup(PropertyGroup):
         description="Whether to export the mandible positioning aid",
         default=True
     )
+
+    screenshot_dir_path: StringProperty(
+        name="Screenshot directory",
+        description="Screenshot directory, where all screenshots will be saved",
+        default="",
+        maxlen=1023,
+        subtype="DIR_PATH"
+    )

@@ -31,6 +31,7 @@ from . import mandible_guides
 from . import clear
 from . import load_handler
 from . import export_guides
+from . import screenshot
 
 
 bl_info = {
@@ -73,6 +74,8 @@ def register():
     bpy.utils.register_class(UI.FFFGenDangerPanel)
     bpy.utils.register_class(UI.FFFGenColorPanel)
     bpy.utils.register_class(UI.FFFGenExportPanel)
+    bpy.utils.register_class(screenshot.SaveScreenshot)
+    bpy.utils.register_class(screenshot.FFFGenScreenshotPanel)
     bpy.app.handlers.load_post.append(load_handler.on_load_post_handler)
 
 
@@ -103,4 +106,5 @@ def unregister():
     bpy.utils.unregister_class(UI.FFFGenDangerPanel)
     bpy.utils.unregister_class(UI.FFFGenColorPanel)
     bpy.utils.unregister_class(UI.FFFGenExportPanel)
-
+    bpy.utils.register_class(screenshot.SaveScreenshot)
+    bpy.utils.register_class(screenshot.FFFGenScreenshotPanel)
