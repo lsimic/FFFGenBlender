@@ -201,17 +201,18 @@ class FFFGenExportPanel(Panel):
         layout = self.layout
         properties = context.scene.FFFGenPropertyGroup
         
-        sub = layout.row() # fibula guide checkbox
-        sub.enabled = ("fibula_guide" in bpy.data.objects.keys())
-        sub.prop(properties, "export_toggle_fibula_guide")
-        
-        sub = layout.row() # mandible guide checkbox
-        sub.enabled = ("joined_mandible_guide" in bpy.data.objects.keys())
-        sub.prop(properties, "export_toggle_mandible_guide")
-        
-        sub = layout.row() # mandible positioning aid checkbox
-        sub.enabled = ("positioning_aid_mesh" in bpy.data.objects.keys())
-        sub.prop(properties, "export_toggle_mandible_aid")
+        if properties.is_initialized:
+            sub = layout.row() # fibula guide checkbox
+            sub.enabled = ("fibula_guide" in bpy.data.objects.keys())
+            sub.prop(properties, "export_toggle_fibula_guide")
+            
+            sub = layout.row() # mandible guide checkbox
+            sub.enabled = ("joined_mandible_guide" in bpy.data.objects.keys())
+            sub.prop(properties, "export_toggle_mandible_guide")
+            
+            sub = layout.row() # mandible positioning aid checkbox
+            sub.enabled = ("positioning_aid_mesh" in bpy.data.objects.keys())
+            sub.prop(properties, "export_toggle_mandible_aid")
 
-        layout.prop(properties, "export_dir_path") # file path
-        layout.operator("fff_gen.export_guides", text="Export") # export button
+            layout.prop(properties, "export_dir_path") # file path
+            layout.operator("fff_gen.export_guides", text="Export") # export button
