@@ -256,9 +256,8 @@ class JoinMandibleGuides(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def compute_positioning_aid_matrix(cutting_plane_obj, mandible_guide_obj): # TODO: (Luka) logic is a bit sketch...
+def compute_positioning_aid_matrix(cutting_plane_obj, mandible_guide_obj):
     cutting_plane_mat_norm = cutting_plane_obj.matrix_world.normalized()
-
     guide_obj_pos = mandible_guide_obj.matrix_world.translation
     guide_obj_dim = mandible_guide_obj.dimensions
 
@@ -270,10 +269,11 @@ def compute_positioning_aid_matrix(cutting_plane_obj, mandible_guide_obj): # TOD
 
     # compute the location of the positioning aid...
     # by projecting the origin of guide_obj onto the cutting plane
-    # and then offseting it by the width in local X direction.
+    # and then offseting it by the width in local X direction. and the height in local z direction.
     # then, the rotation part of the matrix is same as the plane matrix. 
     projected_origin = guide_obj_pos - y_dist * cutting_plane_mat_norm.col[1].to_3d()
     projected_origin = projected_origin - cutting_plane_mat_norm.col[0].to_3d() * 0.5 * guide_obj_dim.x
+    projected_origin = projected_origin + cutting_plane_mat_norm.col[2].to_3d() * 0.25 * guide_obj_dim.y
 
     # build the matrix.
     # use size as scale, because the loaded objects are stored normalized
