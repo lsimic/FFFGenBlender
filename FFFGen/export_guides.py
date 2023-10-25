@@ -21,6 +21,7 @@
 import bpy
 import os
 from bpy import context
+from . import constants
 
 def export_mesh_stl(context, object, dir_path, object_name):
     # TODO: (Luka) add confirmation for overrirde of existing files...
@@ -61,6 +62,80 @@ def export_mandible_positioning_aid(context, dir_path):
         export_mesh_stl(context, obj, dir_path, "mandible_positioning_aid")
     return
 
+# small helper function for object duplication
+# links everything to the scene collection so the new objects should be available to operators etc.
+# using bpy.ops.object.duplicate() has some issues here, i guess due to visibility, even with override context...
+def duplicate_object(object_to_duplicate, duplicated_object_name):
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
+    new_object = object_to_duplicate.copy()
+    new_object.data= object_to_duplicate.data.copy()
+    new_object.name = duplicated_object_name
+    bpy.context.collection.objects.link(new_object)
+    return new_object
+
+def export_reconstructed_mandible(context, dir_path):
+    # TODO: (Luka) implement
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
+
+    # clone mandible object(cut one)
+    mandible_clone = duplicate_object(bpy.data.objects["mandible_copy.001"], "clone_mandible")
+    
+    # on cloned mandible apply all modifiers. the mandible has no constraints set...
+    for mandible_modifier in mandible_clone.modifiers:
+        bpy.context.view_layer.objects.active = mandible_clone
+        bpy.ops.object.modifier_apply(modifier=mandible_modifier.name, single_user=True)
+
+    # clone grafts after accumulating all present...
+    graft_originals = []
+    for obj in bpy.data.collections[constants.COLLECTION_FFF_GEN_MANDIBLE].objects:
+        if obj.name.startswith("fibula_object."):
+            graft_originals.append(obj)
+    graft_clones = []
+    for index, obj in enumerate(graft_originals):
+        graft_clone = duplicate_object(obj, "graft_clone." + str(index))
+        graft_clones.append(graft_clone)
+    
+    # on cloned grafts apply all modifiers and constraints,
+    # move origin to geometry,
+    # and scale each cloned graft on local y axis by a factor of 1.001 to avoid issues with co-planar faces in boolean.
+    for graft_clone in graft_clones:
+        # apply modifiers and constraints
+        for graft_clone_modifier in graft_clone.modifiers:
+            bpy.context.view_layer.objects.active = graft_clone
+            bpy.ops.object.modifier_apply(modifier=graft_clone_modifier.name, single_user=True)
+        for graft_clone_constraint in graft_clone.constraints:
+            bpy.context.view_layer.objects.active = graft_clone
+            bpy.ops.constraint.apply(constraint=graft_clone_constraint.name)
+        # origin to geometry.
+        graft_clone.select_set(True)
+        bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="MEDIAN")
+        graft_clone.select_set(False)
+        # scale cloned graft on local y by a factor of 1.001
+        graft_clone.scale.y = graft_clone.scale.y * 1.001
+
+    # add a boole union on the cloned mandible object for each graft
+    for graft_clone in graft_clones:
+        modifier_boolean = mandible_clone.modifiers.new(
+            name="boolean",
+            type="BOOLEAN"
+        )
+        modifier_boolean.operation = "UNION"
+        modifier_boolean.object = graft_clone
+        modifier_boolean.solver = "EXACT"
+
+    # export the cloned mandible object with modifiers applied
+    export_mesh_stl(context, mandible_clone, dir_path, "reconstructed_mandible")
+
+    # delete all cloned objects as they are no longer required.
+    mandible_clone.select_set(True)
+    for graft_clone in graft_clones:
+        graft_clone.select_set(True)
+    bpy.ops.object.delete()
+    return
+
+# TODO: (Luka) switch this to use invoke_props_dialog and provide a warning message if a file would be overwritten...
 class ExportGuides(bpy.types.Operator):
     bl_idname = "fff_gen.export_guides"
     bl_label = "Export FFF Gen objects"
@@ -74,6 +149,8 @@ class ExportGuides(bpy.types.Operator):
             export_mandible_guide(context, properties.export_dir_path)
         if properties.export_toggle_mandible_aid:
             export_mandible_positioning_aid(context, properties.export_dir_path)
+        if properties.export_toggle_reconstructed_mandible:
+            export_reconstructed_mandible(context, properties.export_dir_path)
         return {"FINISHED"}
 
     def invoke(self, context, event):

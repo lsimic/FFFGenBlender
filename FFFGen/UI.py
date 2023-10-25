@@ -214,5 +214,9 @@ class FFFGenExportPanel(Panel):
             sub.enabled = ("positioning_aid_mesh" in bpy.data.objects.keys())
             sub.prop(properties, "export_toggle_mandible_aid")
 
+            sub = layout.row() # mandible positioning aid checkbox
+            sub.enabled = len(bpy.data.collections[constants.COLLECTION_FFF_GEN_MANDIBLE].objects) > 0
+            sub.prop(properties, "export_toggle_reconstructed_mandible")
+
             layout.prop(properties, "export_dir_path") # file path
             layout.operator("fff_gen.export_guides", text="Export") # export button

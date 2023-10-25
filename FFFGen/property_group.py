@@ -241,6 +241,12 @@ class FFFGenPropertyGroup(PropertyGroup):
         default=True
     )
 
+    export_toggle_reconstructed_mandible: BoolProperty(
+        name="Export Reconstructed Mandible",
+        description="Whether to export the reconstructed mandible object",
+        default=True
+    )
+    
     screenshot_dir_path: StringProperty(
         name="Screenshot directory",
         description="Screenshot directory, where all screenshots will be saved",
