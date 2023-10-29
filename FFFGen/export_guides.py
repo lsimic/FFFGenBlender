@@ -23,17 +23,15 @@ import os
 from bpy import context
 from . import constants
 
-def export_mesh_stl(context, object, dir_path, object_name):
-    # TODO: (Luka) add confirmation for overrirde of existing files...
+def export_mesh_stl(context, object, full_file_path):
     # set override context with the given object.
-    path = os.path.join(bpy.path.abspath(dir_path), object_name + ".stl")
     override = context.copy()
     objList = []
     objList.append(object)
     override["selected_objects"] = objList
     with context.temp_override(**override):
         bpy.ops.export_mesh.stl(
-            filepath=path, 
+            filepath=full_file_path, 
             check_existing=True,
             use_selection=True, 
             global_scale=1.0, 
@@ -44,22 +42,22 @@ def export_mesh_stl(context, object, dir_path, object_name):
 
     return
 
-def export_fibula_guide(context, dir_path):
+def export_fibula_guide(context, full_file_path):
     if "fibula_guide" in bpy.data.objects.keys():
         obj = bpy.data.objects["fibula_guide"]
-        export_mesh_stl(context, obj, dir_path, "fibula_guide")
+        export_mesh_stl(context, obj, full_file_path)
     return
 
-def export_mandible_guide(context, dir_path):
+def export_mandible_guide(context, full_file_path):
     if "joined_mandible_guide" in bpy.data.objects.keys():
         obj = bpy.data.objects["joined_mandible_guide"]
-        export_mesh_stl(context, obj, dir_path, "mandible_guide")
+        export_mesh_stl(context, obj, full_file_path)
     return
 
-def export_mandible_positioning_aid(context, dir_path):
+def export_mandible_positioning_aid(context, full_file_path):
     if "positioning_aid_mesh" in bpy.data.objects.keys():
         obj = bpy.data.objects["positioning_aid_mesh"]
-        export_mesh_stl(context, obj, dir_path, "mandible_positioning_aid")
+        export_mesh_stl(context, obj, full_file_path)
     return
 
 # small helper function for object duplication
@@ -74,8 +72,7 @@ def duplicate_object(object_to_duplicate, duplicated_object_name):
     bpy.context.collection.objects.link(new_object)
     return new_object
 
-def export_reconstructed_mandible(context, dir_path):
-    # TODO: (Luka) implement
+def export_reconstructed_mandible(context, full_file_path):
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
 
@@ -126,7 +123,7 @@ def export_reconstructed_mandible(context, dir_path):
         modifier_boolean.solver = "EXACT"
 
     # export the cloned mandible object with modifiers applied
-    export_mesh_stl(context, mandible_clone, dir_path, "reconstructed_mandible")
+    export_mesh_stl(context, mandible_clone, full_file_path)
 
     # delete all cloned objects as they are no longer required.
     mandible_clone.select_set(True)
@@ -135,23 +132,73 @@ def export_reconstructed_mandible(context, dir_path):
     bpy.ops.object.delete()
     return
 
-# TODO: (Luka) switch this to use invoke_props_dialog and provide a warning message if a file would be overwritten...
 class ExportGuides(bpy.types.Operator):
     bl_idname = "fff_gen.export_guides"
     bl_label = "Export FFF Gen objects"
     bl_description = "Exports the enabled fff gen objects (guides and positioning aids)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def get_stl_abspath(self, context, filename):
+        properties = context.scene.FFFGenPropertyGroup
+        dir_path = properties.export_dir_path
+        if (dir_path.startswith("//")):
+            dir_path = bpy.path.abspath(dir_path)
+        path = os.path.join(dir_path, filename + ".stl")
+        return path
+
+    def find_path_check_exists(self, context, file):
+        full_file_path = self.get_stl_abspath(context, file)
+        exists = os.path.exists(full_file_path)
+        return (full_file_path, exists)
+
+    def draw(self, context):
+        layout = self.layout
+        warn_paths = []
+        properties = context.scene.FFFGenPropertyGroup
+        
+        if properties.export_toggle_fibula_guide:
+            fibula_path_exists = self.find_path_check_exists(context, "fibula_guide")
+            if fibula_path_exists[1]:
+                warn_paths.append(fibula_path_exists[0])
+        
+        if properties.export_toggle_mandible_guide:
+            mandible_path_exists = self.find_path_check_exists(context, "mandible_guide")
+            if mandible_path_exists[1]:
+                warn_paths.append(mandible_path_exists[0])
+        
+        if properties.export_toggle_mandible_aid:
+            positioning_path_exists = self.find_path_check_exists(context, "positioning_aid")
+            if positioning_path_exists[1]:
+                warn_paths.append(positioning_path_exists[0])
+
+        if properties.export_toggle_reconstructed_mandible:
+            reconstructed_path_exists = self.find_path_check_exists(context, "reconstructed_mandible")
+            if reconstructed_path_exists[1]:
+                warn_paths.append(reconstructed_path_exists[0])
+        
+        if len(warn_paths) > 0:
+            layout.label(text="The following files exist.", icon="ERROR")
+            for path in warn_paths:
+                layout.label(text=path)
+            layout.label(text="They will be overwritten.", icon="ERROR")
+        
+        return
 
     def execute(self, context):
         properties = context.scene.FFFGenPropertyGroup
         if properties.export_toggle_fibula_guide:
-            export_fibula_guide(context, properties.export_dir_path)
+            export_path = self.get_stl_abspath(context, "fibula_guide")
+            export_fibula_guide(context, export_path)
         if properties.export_toggle_mandible_guide:
-            export_mandible_guide(context, properties.export_dir_path)
+            export_path = self.get_stl_abspath(context, "mandible_guide")
+            export_mandible_guide(context, export_path)
         if properties.export_toggle_mandible_aid:
-            export_mandible_positioning_aid(context, properties.export_dir_path)
+            export_path = self.get_stl_abspath(context, "positioning_aid")
+            export_mandible_positioning_aid(context, export_path)
         if properties.export_toggle_reconstructed_mandible:
-            export_reconstructed_mandible(context, properties.export_dir_path)
+            export_path = self.get_stl_abspath(context, "reconstructed_mandible")
+            export_reconstructed_mandible(context, export_path)
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
+        return context.window_manager.invoke_props_dialog(self)
