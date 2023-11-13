@@ -122,6 +122,11 @@ def update_duplis():
         if obj.name.startswith("fibula_object."):
             objects_fibula.append(obj)
 
+    if "fibula_copy" in bpy.data.objects.keys():
+        fibula_orig = bpy.data.objects["fibula_copy"]
+    else:
+        fibula_orig = None
+
     for obj_fibula in objects_fibula:
         # duplicate fibula obj.
         override_context = {
@@ -137,8 +142,12 @@ def update_duplis():
         )
         # remove constraints from dupli and reset location and rotation
         bpy.ops.object.constraints_clear()
-        obj_fibula_dupli.location = (0.0, 0.0, 0.0)
-        obj_fibula_dupli.rotation_euler = (0.0, 0.0, 0.0)
+        if fibula_orig is not None:
+            obj_fibula_dupli.location = fibula_orig.location
+            obj_fibula_dupli.rotation_euler = fibula_orig.rotation_euler
+        else:
+            obj_fibula_dupli.location = (0.0, 0.0, 0.0)
+            obj_fibula_dupli.rotation_euler = (0.0, 0.0, 0.0)
         fibula_dupli_name = "fibula_dupli." + obj_fibula.name[14:]
         obj_fibula_dupli.name = fibula_dupli_name
 
