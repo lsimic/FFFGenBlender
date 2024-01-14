@@ -106,5 +106,5 @@ def unregister():
     bpy.utils.unregister_class(UI.FFFGenDangerPanel)
     bpy.utils.unregister_class(UI.FFFGenColorPanel)
     bpy.utils.unregister_class(UI.FFFGenExportPanel)
-    bpy.utils.register_class(screenshot.SaveScreenshot)
-    bpy.utils.register_class(screenshot.FFFGenScreenshotPanel)
+    bpy.utils.unregister_class(screenshot.SaveScreenshot)
+    bpy.utils.unregister_class(screenshot.FFFGenScreenshotPanel)
