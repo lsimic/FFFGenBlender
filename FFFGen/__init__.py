@@ -32,6 +32,7 @@ from . import clear
 from . import load_handler
 from . import export_guides
 from . import screenshot
+from . import bevel_worldspace
 
 
 bl_info = {
@@ -76,6 +77,7 @@ def register():
     bpy.utils.register_class(UI.FFFGenExportPanel)
     bpy.utils.register_class(screenshot.SaveScreenshot)
     bpy.utils.register_class(screenshot.FFFGenScreenshotPanel)
+    bpy.utils.register_class(bevel_worldspace.FFFGenBevelPanel)
     bpy.app.handlers.load_post.append(load_handler.on_load_post_handler)
 
 
@@ -108,3 +110,5 @@ def unregister():
     bpy.utils.unregister_class(UI.FFFGenExportPanel)
     bpy.utils.unregister_class(screenshot.SaveScreenshot)
     bpy.utils.unregister_class(screenshot.FFFGenScreenshotPanel)
+    bpy.utils.unregister_class(bevel_worldspace.FFFGenBevelPanel)
+

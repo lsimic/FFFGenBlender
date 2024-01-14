@@ -23,6 +23,7 @@ import bpy
 import mathutils
 from .move_object_to_collection import move_object_to_collection
 from .external_loading import load_guide_cube, load_positioning_aid_objects
+from .bevel_worldspace import create_bevel_modifier
 from . import constants
 from . import materials
 import os
@@ -109,6 +110,13 @@ def setup_union_mandible_guide(obj_boolean_union, obj_mandible_guide):
 
 
 def setup_mandible_guide_modifiers(obj_mandible, obj_mandible_guide, obj_boolean_diff, obj_boolean_union):
+    # add bevel to mandible guide.
+    bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+    bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+    create_bevel_modifier(obj_mandible_guide, "fffgen_bevel_" + obj_mandible_guide.name, bevel_seg, bevel_width)
+
+    create_bevel_modifier(obj_boolean_union, "fffgen_bevel_" + obj_mandible_guide.name, bevel_seg, bevel_width)
+
     # add modifier (boolean, union) to the mandible_guide
     modifier_union = obj_mandible_guide.modifiers.new(
         name="boolean_union_cutting_guides",
@@ -516,6 +524,11 @@ def create_mandible_guide_join_cube(obj_guide_start, obj_guide_end):
 
 
 def setup_mandible_joined_modifiers(obj_guide_start, obj_guide_end, obj_mandible, obj_guide):
+    # mandible guide bevel...
+    bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+    bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+    create_bevel_modifier(obj_guide, "fffgen_bevel_" + obj_guide.name, bevel_seg, bevel_width)
+
     # add bolean modifier difference(with mandible)
     mod_difference = obj_guide.modifiers.new(
         name="boolean_difference",

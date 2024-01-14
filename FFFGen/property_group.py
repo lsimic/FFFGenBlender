@@ -254,3 +254,35 @@ class FFFGenPropertyGroup(PropertyGroup):
         maxlen=1023,
         subtype="DIR_PATH"
     )
+
+    def bevel_segmentcount_update(self, context):
+        val = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+        for obj in bpy.data.objects:
+            for mod in obj.modifiers:
+                if mod.name.startswith("fffgen_bevel"):
+                    mod.segments = val
+        return
+    
+    def bevel_width_update(self, context):
+        val = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+        for obj in bpy.data.objects:
+            for mod in obj.modifiers:
+                if mod.name.startswith("fffgen_bevel"):
+                    mod.width = val
+        return
+
+    bevel_segmentcount: IntProperty(
+        name="Bevel segment count",
+        description="Number of bevel segments.",
+        default=3,
+        min=0,
+        update = bevel_segmentcount_update
+    )
+
+    bevel_width: FloatProperty(
+        name="Bevel width",
+        min=0.0,
+        default=0.1,
+        description="Bevel width",
+        update=bevel_width_update
+    )
