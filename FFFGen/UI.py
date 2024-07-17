@@ -115,6 +115,7 @@ class FFFGenGuidesPanel(Panel):
                 box.operator("fff_gen.create_fibula_screw", text="Create Fibula guide screw")
 
         if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES):
+            layout.prop(properties, "positioning_aid_toggle")
             box = layout.box()
             box.label(text="Mandible Guides:")
             if not len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
@@ -123,7 +124,19 @@ class FFFGenGuidesPanel(Panel):
             else:
                 box.operator("fff_gen.create_mandible_start_screw", text="Create Mandible Start Screw")
                 box.operator("fff_gen.create_mandible_end_screw", text="Create Mandible End Screw")
-                box.operator("fff_gen.join_mandible_guides", text="Join mandible guides")
+                if properties.positioning_aid_toggle == "GUIDE":
+                    if not "joined_mandible_guide" in bpy.data.objects.keys():
+                        box.operator("fff_gen.join_mandible_guides", text="Join mandible guides")
+                else:
+                    # try to find the positioning aid object
+                    # if found - it is initialized
+                    # otherwise - it is not initialized and show the button to do so.
+                    if not "positioning_aid_mesh" in bpy.data.objects.keys():
+                        box.operator("fff_gen.create_mandible_positioning_aid", text="Create positioning aid")
+                    else:
+                        # Property to adjust scale/thickness
+                        box.prop(properties, "positioning_aid_size_x")
+                        box.prop(properties, "positioning_aid_size_z")
 
 
 class FFFGenDangerPanel(Panel):
@@ -144,8 +157,12 @@ class FFFGenDangerPanel(Panel):
                 col.operator("fff_gen.clear_fibula_guides", text="Clear Fibula Guides")
         
         if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES):
-            if len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
-                col.operator("fff_gen.clear_mandible_guides", text="Clear Mandible Guides")
+            if properties.positioning_aid_toggle == "GUIDE":
+                if len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
+                    col.operator("fff_gen.clear_mandible_guides", text="Clear Mandible Guides")
+            else:
+                if "positioning_aid_mesh" in bpy.data.objects.keys():
+                    col.operator("fff_gen.clear_mandible_positioning_aid", text="Clear positioning aid")
         
         if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_POSITIONING):
             if len(bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_FIBULA].objects):
@@ -171,3 +188,35 @@ class FFFGenColorPanel(Panel):
                     row = layout.row()
                     row.prop(obj.data.materials[0], "diffuse_color")
 
+
+class FFFGenExportPanel(Panel):
+    bl_idname = "FFF_GEN_PT_export"
+    bl_label = "Export"
+    bl_category = "FFF Gen"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        layout = self.layout
+        properties = context.scene.FFFGenPropertyGroup
+        
+        if properties.is_initialized:
+            sub = layout.row() # fibula guide checkbox
+            sub.enabled = ("fibula_guide" in bpy.data.objects.keys())
+            sub.prop(properties, "export_toggle_fibula_guide")
+            
+            sub = layout.row() # mandible guide checkbox
+            sub.enabled = ("joined_mandible_guide" in bpy.data.objects.keys())
+            sub.prop(properties, "export_toggle_mandible_guide")
+            
+            sub = layout.row() # mandible positioning aid checkbox
+            sub.enabled = ("positioning_aid_mesh" in bpy.data.objects.keys())
+            sub.prop(properties, "export_toggle_mandible_aid")
+
+            sub = layout.row() # mandible positioning aid checkbox
+            sub.enabled = len(bpy.data.collections[constants.COLLECTION_FFF_GEN_MANDIBLE].objects) > 0
+            sub.prop(properties, "export_toggle_reconstructed_mandible")
+
+            layout.prop(properties, "export_dir_path") # file path
+            layout.operator("fff_gen.export_guides", text="Export") # export button

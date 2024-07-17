@@ -101,6 +101,12 @@ def set_cutting_plane_positions(objects_cutting_planes):
         if obj.name.startswith("fibula_object"):
             objects_fibula[obj.name] = obj
 
+    if "fibula_copy" in bpy.data.objects.keys():
+        fibula_orig = bpy.data.objects["fibula_copy"]
+    else:
+        fibula_orig = None
+
+
     for obj_fibula in objects_fibula.values():
         # duplicate the fibula object
         for obj in bpy.context.selected_objects:
@@ -127,8 +133,13 @@ def set_cutting_plane_positions(objects_cutting_planes):
         obj_plane_end.select_set(False)
         bpy.context.view_layer.objects.active = obj_fibula_dupli
         bpy.ops.object.constraints_clear()
-        obj_fibula_dupli.location = (0.0, 0.0, 0.0)
-        obj_fibula_dupli.rotation_euler = (0.0, 0.0, 0.0)
+
+        if fibula_orig is not None:
+            obj_fibula_dupli.location = fibula_orig.location
+            obj_fibula_dupli.rotation_euler = fibula_orig.rotation_euler
+        else:
+            obj_fibula_dupli.location = (0.0, 0.0, 0.0)
+            obj_fibula_dupli.rotation_euler = (0.0, 0.0, 0.0)
 
         # clear the parent relationship, but keep the transformations to keep planes in place
         obj_fibula_dupli.select_set(False)
@@ -183,6 +194,7 @@ def setup_cutting_planes(cutting_plane_start_orig, cutting_plane_end_orig, armat
             )
             constraint_child_of.target = armature
             constraint_child_of.subtarget = bone.name
+            bpy.ops.constraint.childof_clear_inverse(constraint=constraint_child_of.name, owner="OBJECT")
             cutting_plane_dupli.select_set(False)
             bpy.context.view_layer.objects.active = None
 

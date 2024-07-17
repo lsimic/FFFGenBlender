@@ -53,6 +53,10 @@ class InitializeAddon(bpy.types.Operator):
         # enable selection in both pose and object mode
         bpy.context.scene.tool_settings.lock_object_mode = False
 
+        # make the transforms in local space by default. 
+        for idx in range(0, 4):
+            bpy.context.scene.transform_orientation_slots[idx].type = "LOCAL"
+
         return {"FINISHED"}
 
 

@@ -22,6 +22,7 @@
 import bpy
 from .move_object_to_collection import move_object_to_collection
 from .external_loading import load_guide_cube
+from .bevel_worldspace import create_bevel_modifier
 from . import constants
 from . import materials
 import os
@@ -46,7 +47,6 @@ class CreateFibulaGuide(bpy.types.Operator):
         setup_fibula_guide_modifiers(obj_fibula_guide, obj_boolean_union, obj_boolean_difference, obj_boolean_union_limit, obj_boolean_difference_limit, obj_fibula)
         obj_boolean_union.hide_set(True)
         obj_boolean_difference.hide_set(True)
-        print("uwu 7")
         #set material
         if len(obj_fibula_guide.data.materials):
             obj_fibula_guide.data.materials[0] = materials.get_guide()
@@ -112,7 +112,6 @@ def create_obj_boolean_union(objects_cutting_planes):
         modifier_boolean.operation = "UNION"
         modifier_boolean.object = objects_planes_geometry[i]
         bpy.ops.object.modifier_apply(
-            apply_as="DATA",
             modifier=modifier_boolean.name
         )
 
@@ -164,7 +163,6 @@ def create_obj_boolean_difference(objects_cutting_planes):
         modifier_union.operation = "UNION"
         modifier_union.object = objects_planes_difference[i]
         bpy.ops.object.modifier_apply(
-            apply_as="DATA",
             modifier=modifier_union.name
         )
     
@@ -253,13 +251,13 @@ def create_boj_boolean_difference_limit(obj_fibula_guide):
 
 
 def setup_fibula_guide_modifiers(obj_fibula_guide, obj_boolean_union, obj_boolean_difference, obj_boolean_union_limit, obj_boolean_difference_limit, obj_fibula):
+    bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+    bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
     obj_boolean_union.select_set(True)
     bpy.context.view_layer.objects.active = obj_boolean_union
-    bpy.ops.object.modifier_add(
-        type="BOOLEAN"
-    )
     modifier_boolean_intersect = obj_boolean_union.modifiers.new(
         name="boolean_intersect",
         type="BOOLEAN"
@@ -267,6 +265,8 @@ def setup_fibula_guide_modifiers(obj_fibula_guide, obj_boolean_union, obj_boolea
     modifier_boolean_intersect.operation = "INTERSECT"
     modifier_boolean_intersect.object = obj_boolean_union_limit
     obj_boolean_union.select_set(False)
+
+    create_bevel_modifier(obj_boolean_union, "fffgen_bevel_fibula_guide_union", bevel_seg, bevel_width)
 
     obj_boolean_difference.select_set(True)
     bpy.context.view_layer.objects.active = obj_boolean_difference
@@ -277,6 +277,8 @@ def setup_fibula_guide_modifiers(obj_fibula_guide, obj_boolean_union, obj_boolea
     modifier_boolean_intersect.operation = "INTERSECT"
     modifier_boolean_intersect.object = obj_boolean_difference_limit
     obj_boolean_difference.select_set(False)
+
+    create_bevel_modifier(obj_fibula_guide, "fffgen_bevel_fibula_guide", bevel_seg, bevel_width)
 
     obj_fibula_guide.select_set(True)
     obj_fibula_guide.scale = (1.0, 8.0, 1.0)

@@ -147,6 +147,7 @@ def decimate_objects():
 
 def initialize_armature():
     # add armature object, enter edit mode
+    bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
     bpy.ops.object.armature_add()
     armature = bpy.context.active_object
     bpy.ops.object.mode_set(
@@ -184,10 +185,6 @@ def initialize_armature():
 
     # reset 3D cursor
     bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
-    # reset transform pivot point to back to median
-    bpy.context.scene.tool_settings.transform_pivot_point = "MEDIAN_POINT"
-
-
     # reset transform pivot point back to median
     bpy.context.scene.tool_settings.transform_pivot_point = "MEDIAN_POINT"
 
@@ -216,10 +213,11 @@ def initialize_boolean_objects(armature):
         for obj in bpy.context.selected_objects:
             obj.select_set(False)
         obj_boolean_cube_dupli = obj_boolean_cube.copy()
+        obj_boolean_cube_dupli.data = obj_boolean_cube.data.copy()
+        obj_boolean_cube_dupli.name = "boolean_cube." + str(i)
         obj_boolean_cube_dupli.location.y = i*3.0
         obj_boolean_cube_dupli.vertex_groups[0].name = "bone." + str(i)
         obj_boolean_cube_dupli.vertex_groups[1].name = "bone." + str(i + 1)
-        obj_boolean_cube_dupli.name = "boolean_cube." + str(i)
         bpy.context.scene.collection.objects.link(obj_boolean_cube_dupli)
         # move to collection
         move_object_to_collection(
@@ -297,6 +295,7 @@ def initialize_fibula_vectors(segment_count, armature):
         bone_end_name = "bone." + str(i+1)
 
         # create the empty which represents the vector
+        bpy.context.scene.cursor.location = (0.0, i * 3.0, 0.0)
         bpy.ops.object.empty_add(
             type="ARROWS"
         )
@@ -323,6 +322,7 @@ def initialize_fibula_vectors(segment_count, armature):
         obj_vector.hide_set(True)
         objects_vectors[obj_vector.name] = obj_vector
     
+    bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
     return objects_vectors
 
 

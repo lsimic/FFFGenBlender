@@ -22,7 +22,8 @@
 import bpy
 import mathutils
 from .move_object_to_collection import move_object_to_collection
-from .external_loading import load_guide_cube
+from .external_loading import load_guide_cube, load_positioning_aid_objects
+from .bevel_worldspace import create_bevel_modifier
 from . import constants
 from . import materials
 import os
@@ -109,6 +110,13 @@ def setup_union_mandible_guide(obj_boolean_union, obj_mandible_guide):
 
 
 def setup_mandible_guide_modifiers(obj_mandible, obj_mandible_guide, obj_boolean_diff, obj_boolean_union):
+    # add bevel to mandible guide.
+    bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+    bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+    create_bevel_modifier(obj_mandible_guide, "fffgen_bevel_" + obj_mandible_guide.name, bevel_seg, bevel_width)
+
+    create_bevel_modifier(obj_boolean_union, "fffgen_bevel_" + obj_mandible_guide.name, bevel_seg, bevel_width)
+
     # add modifier (boolean, union) to the mandible_guide
     modifier_union = obj_mandible_guide.modifiers.new(
         name="boolean_union_cutting_guides",
@@ -211,7 +219,11 @@ class CreateMandibleStartScrew(bpy.types.Operator):
 
     def invoke(self, context, event):
         mandible_guide_start = bpy.data.objects["mandible_guide_start"]
-        create_mandible_screw(mandible_guide_start, "start")
+        if "positioning_aid_start" in bpy.data.objects.keys():
+            mandible_positioning_aid = bpy.data.objects["positioning_aid_start"]
+        else:
+            mandible_positioning_aid = None
+        create_mandible_screw(mandible_guide_start, mandible_positioning_aid, "start")
         return {"FINISHED"}
 
 
@@ -222,7 +234,11 @@ class CreateMandibleEndScrew(bpy.types.Operator):
 
     def invoke(self, context, event):
         mandible_guide_end = bpy.data.objects["mandible_guide_end"]
-        create_mandible_screw(mandible_guide_end, "end")
+        if "positioning_aid_end" in bpy.data.objects.keys():
+            mandible_positioning_aid = bpy.data.objects["positioning_aid_end"]
+        else:
+            mandible_positioning_aid = None
+        create_mandible_screw(mandible_guide_end, mandible_positioning_aid, "end")
         return {"FINISHED"}
 
 
@@ -245,6 +261,151 @@ class JoinMandibleGuides(bpy.types.Operator):
         else:
             obj_guide.data.materials.append(materials.get_guide())
         
+        return {"FINISHED"}
+
+
+def compute_positioning_aid_matrix(cutting_plane_obj, mandible_guide_obj):
+    cutting_plane_mat_norm = cutting_plane_obj.matrix_world.normalized()
+    guide_obj_pos = mandible_guide_obj.matrix_world.translation
+    guide_obj_dim = mandible_guide_obj.dimensions
+
+    # compute the size of the positioning aid...
+    # x, z dimension can be split.
+    # y dimension is computed by checking the distance from origin to plane and split y dim
+    y_dist = (guide_obj_pos - cutting_plane_mat_norm.translation).dot(cutting_plane_mat_norm.col[1])
+    positioning_aid_size = mathutils.Vector((guide_obj_dim.x, 0.5 * guide_obj_dim.y + y_dist, 0.5 * guide_obj_dim.z))
+
+    # compute the location of the positioning aid...
+    # by projecting the origin of guide_obj onto the cutting plane
+    # and then offseting it by the width in local X direction. and the height in local z direction.
+    # then, the rotation part of the matrix is same as the plane matrix. 
+    projected_origin = guide_obj_pos - y_dist * cutting_plane_mat_norm.col[1].to_3d()
+    projected_origin = projected_origin - cutting_plane_mat_norm.col[0].to_3d() * 0.5 * guide_obj_dim.x
+    projected_origin = projected_origin + cutting_plane_mat_norm.col[2].to_3d() * 0.25 * guide_obj_dim.y
+
+    # build the matrix.
+    # use size as scale, because the loaded objects are stored normalized
+    positioning_aid_matrix = mathutils.Matrix.LocRotScale(projected_origin, cutting_plane_mat_norm.to_quaternion(), positioning_aid_size)
+    return positioning_aid_matrix
+
+
+class CreateMandiblePositioningAid(bpy.types.Operator):
+    bl_idname = "fff_gen.create_mandible_positioning_aid"
+    bl_label = "Create mandible positioning aid"
+    bl_description = "Creates the mandible positioning aid using the existing mandible guide objects"
+
+    def invoke(self, context, event):
+        # get the needed collections
+        collection_mandible_guide = bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE]
+
+        # load the required objects from the scene
+        load_positioning_aid_objects()
+        obj_positioning_aid_curve = bpy.data.objects["positioning_aid_curve"]
+        obj_positioning_aid_curve_handle_start = bpy.data.objects["positioning_aid_curve_handle_start"]
+        obj_positioning_aid_curve_handle_end = bpy.data.objects["positioning_aid_curve_handle_end"]
+        obj_positioning_aid_start = bpy.data.objects["positioning_aid_start"]
+        obj_positioning_aid_end = bpy.data.objects["positioning_aid_end"]
+        obj_positioning_aid = bpy.data.objects["positioning_aid_mesh"]
+
+        # move loaded objects to collections...
+        move_object_to_collection(
+            obj_to_move=obj_positioning_aid_curve,
+            collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+            remove_from_current=True
+        )
+        move_object_to_collection(
+            obj_to_move=obj_positioning_aid_start,
+            collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+            remove_from_current=True
+        )
+        move_object_to_collection(
+            obj_to_move=obj_positioning_aid_end,
+            collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+            remove_from_current=True
+        )
+        move_object_to_collection(
+            obj_to_move=obj_positioning_aid_curve_handle_start,
+            collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+            remove_from_current=True
+        )
+        move_object_to_collection(
+            obj_to_move=obj_positioning_aid_curve_handle_end,
+            collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+            remove_from_current=True
+        )
+        move_object_to_collection(
+            obj_to_move=obj_positioning_aid,
+            collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+            remove_from_current=True
+        )
+
+        # compute the matrix for positioning aid start/end parts
+        # it will have the scale/translation/rotation components set in such a way that it aligns well with existing objects.
+        pos_aid_matrix_start = compute_positioning_aid_matrix(bpy.data.objects["mandible_guide_start_difference"], bpy.data.objects["mandible_guide_start"])
+        pos_aid_matrix_end = compute_positioning_aid_matrix(bpy.data.objects["mandible_guide_end_difference"], bpy.data.objects["mandible_guide_end"])
+
+        # set the matrix for start/end
+        obj_positioning_aid_start.matrix_world = pos_aid_matrix_start
+        obj_positioning_aid_end.matrix_world = pos_aid_matrix_end
+
+        # set the matrix for curve handles...
+        obj_positioning_aid_curve_handle_start.matrix_world = pos_aid_matrix_start
+        obj_positioning_aid_curve_handle_end.matrix_world = pos_aid_matrix_end
+
+        # add boolean modifiers with the mandible objects where necessary (for start and end of positioning aid)
+        # the rest of the booleans to merge the positioning aid together already exist on the curve object.
+        modifier_difference_start = obj_positioning_aid_start.modifiers.new(
+            name="boolean_difference_mandible",
+            type="BOOLEAN"
+        )
+        modifier_difference_start.operation = "DIFFERENCE"
+        modifier_difference_start.object = bpy.context.scene.FFFGenPropertyGroup.mandible_object
+        
+        modifier_difference_end = obj_positioning_aid_end.modifiers.new(
+            name="boolean_difference_mandible",
+            type="BOOLEAN"
+        )
+        modifier_difference_end.operation = "DIFFERENCE"
+        modifier_difference_end.object = bpy.context.scene.FFFGenPropertyGroup.mandible_object
+
+
+        # TODO: (Luka) add constraint, copy location, y axis, both target and owner in local_space. 
+        # this makes sure that the positioning aid will remain aligned with the guide when translated.
+        # scaling will not misalign it, as the origin is on the cutting plane.
+
+        # find existing screws for start, end 
+        objects_screw_start = []
+        objects_screw_end = []
+        for obj in collection_mandible_guide.objects:
+            if obj.name_full.startswith("mandible_guide_start_screw_hole"):
+                objects_screw_start.append(obj)
+            elif obj.name_full.startswith("mandible_guide_end_screw_hole"):
+                objects_screw_end.append(obj)
+
+        # init the boolean modifiers for start using the existing screws
+        for screw_start_obj in objects_screw_start:
+            obj_positioning_aid_start.select_set(True)
+            bpy.context.view_layer.objects.active = obj_positioning_aid_start
+            modifier_mandible_aid_screw = obj_positioning_aid_start.modifiers.new(
+                name="boolean_difference_screw",
+                type="BOOLEAN"
+            )
+            modifier_mandible_aid_screw.operation = "DIFFERENCE"
+            modifier_mandible_aid_screw.object = screw_start_obj
+            obj_positioning_aid_start.select_set(False)
+        
+        # init the boolean modifiers for end using the existing screws
+        for screw_end_obj in objects_screw_end:
+            obj_positioning_aid_end.select_set(True)
+            bpy.context.view_layer.objects.active = obj_positioning_aid_end
+            modifier_mandible_aid_screw = obj_positioning_aid_end.modifiers.new(
+                name="boolean_difference_screw",
+                type="BOOLEAN"
+            )
+            modifier_mandible_aid_screw.operation = "DIFFERENCE"
+            modifier_mandible_aid_screw.object = screw_end_obj
+            obj_positioning_aid_end.select_set(False)
+
         return {"FINISHED"}
 
 
@@ -274,7 +435,8 @@ def setup_mandible_screw_constraints(obj_mandible_guide, obj_screw_hole):
     obj_screw_hole.select_set(False)
 
 
-def setup_mandible_screw_modifiers(obj_mandible_guide, obj_screw_hole):
+def setup_mandible_screw_modifiers(obj_mandible_guide, obj_positioning_aid, obj_screw_hole):
+    # add boolean modifier to mandible guide
     obj_mandible_guide.select_set(True)
     bpy.context.view_layer.objects.active = obj_mandible_guide
     modifier_mandible_screw = obj_mandible_guide.modifiers.new(
@@ -283,9 +445,22 @@ def setup_mandible_screw_modifiers(obj_mandible_guide, obj_screw_hole):
     )
     modifier_mandible_screw.operation = "DIFFERENCE"
     modifier_mandible_screw.object = obj_screw_hole
+    obj_mandible_guide.select_set(False)
+
+    # add boolean modifier to mandible positioning aid
+    if obj_positioning_aid is not None:
+        obj_positioning_aid.select_set(True)
+        bpy.context.view_layer.objects.active = obj_positioning_aid
+        modifier_mandible_screw = obj_positioning_aid.modifiers.new(
+            name="boolean_difference_screw",
+            type="BOOLEAN"
+        )
+        modifier_mandible_screw.operation = "DIFFERENCE"
+        modifier_mandible_screw.object = obj_screw_hole
+        obj_positioning_aid.select_set(False)
 
 
-def create_mandible_screw(obj_mandible_guide, name):
+def create_mandible_screw(obj_mandible_guide, obj_positioning_aid, name):
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
 
@@ -303,7 +478,7 @@ def create_mandible_screw(obj_mandible_guide, name):
     setup_mandible_screw_constraints(obj_mandible_guide, obj_screw_hole)
 
     # add boolean modifier (difference) to mandible guide, using the cylinder as the target
-    setup_mandible_screw_modifiers(obj_mandible_guide, obj_screw_hole)
+    setup_mandible_screw_modifiers(obj_mandible_guide, obj_positioning_aid, obj_screw_hole)
 
     # select screw hole, make it active when the function finishes
     # so it can be moved easily by the user without the need to select.
@@ -349,6 +524,11 @@ def create_mandible_guide_join_cube(obj_guide_start, obj_guide_end):
 
 
 def setup_mandible_joined_modifiers(obj_guide_start, obj_guide_end, obj_mandible, obj_guide):
+    # mandible guide bevel...
+    bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+    bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+    create_bevel_modifier(obj_guide, "fffgen_bevel_" + obj_guide.name, bevel_seg, bevel_width)
+
     # add bolean modifier difference(with mandible)
     mod_difference = obj_guide.modifiers.new(
         name="boolean_difference",

@@ -39,14 +39,27 @@ class ClearFibulaGuides(bpy.types.Operator):
 
 class ClearMandibleGuides(bpy.types.Operator):
     bl_idname = "fff_gen.clear_mandible_guides"
-    bl_label = "Clear mandible guide objects"
-    bl_description = "Removes all mandible guide objects"
+    bl_label = "Clear mandible guide and positioning aid objects"
+    bl_description = "Removes all mandible and positioning guide objects"
 
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
     
     def execute(self, context):
         clear_mandible_guides()
+        return {"FINISHED"}
+
+
+class ClearMandiblePositioningAid(bpy.types.Operator):
+    bl_idname = "fff_gen.clear_mandible_positioning_aid"
+    bl_label = "Clear mandible positioning aid objects"
+    bl_description = "Removes all mandible positioning aid objects"
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+    
+    def execute(self, context):
+        clear_mandible_positioning_aid()
         return {"FINISHED"}
 
 
@@ -95,6 +108,32 @@ def clear_mandible_guides():
     bpy.ops.object.delete(override_context)
     # set cutting plane visibility back
     bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_MANDIBLE].hide_viewport = False
+
+
+def clear_mandible_positioning_aid():
+    # deselect all selected objects
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
+
+    # select all positioning aid specific objects.
+    objects = []
+    positioning_aid_object_names = [
+        "positioning_aid_curve",
+        "positioning_aid_curve_handle_start",
+        "positioning_aid_curve_handle_end",
+        "positioning_aid_start",
+        "positioning_aid_end",
+        "positioning_aid_mesh"
+    ]
+    for obj_name in positioning_aid_object_names:
+        if obj_name in bpy.data.objects.keys():
+            objects.append(bpy.data.objects[obj_name])
+    override_context = {
+        "selected_objects":objects
+    }
+
+    # delete using override context
+    bpy.ops.object.delete(override_context)
 
 
 def clear_fibula_guides():
