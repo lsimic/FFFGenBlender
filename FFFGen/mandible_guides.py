@@ -352,6 +352,12 @@ class CreateMandiblePositioningAid(bpy.types.Operator):
         obj_positioning_aid_curve_handle_start.matrix_world = pos_aid_matrix_start
         obj_positioning_aid_curve_handle_end.matrix_world = pos_aid_matrix_end
 
+        # add bevel to positioning aid
+        bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+        bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+        create_bevel_modifier(obj_positioning_aid_start, "fffgen_bevel_" + obj_positioning_aid_start.name, bevel_seg, bevel_width)
+        create_bevel_modifier(obj_positioning_aid_end, "fffgen_bevel_" + obj_positioning_aid_end.name, bevel_seg, bevel_width)
+
         # add boolean modifiers with the mandible objects where necessary (for start and end of positioning aid)
         # the rest of the booleans to merge the positioning aid together already exist on the curve object.
         modifier_difference_start = obj_positioning_aid_start.modifiers.new(
