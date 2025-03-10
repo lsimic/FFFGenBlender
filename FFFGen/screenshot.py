@@ -49,7 +49,13 @@ class SaveScreenshot(bpy.types.Operator):
 
     def execute(self, context):
         complete_img_path = self.find_file_name(context)
-        bpy.ops.screen.screenshot(filepath=complete_img_path, hide_props_region=True)
+        context.scene.render.resolution_x = context.area.width * 2
+        context.scene.render.resolution_y = context.area.height * 2
+
+        with context.temp_override():
+            bpy.ops.render.opengl(write_still=False)
+            bpy.data.images["Render Result"].save_render(complete_img_path)
+
         return {"FINISHED"}
     
     def draw(self, context):
