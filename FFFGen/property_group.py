@@ -286,3 +286,10 @@ class FFFGenPropertyGroup(PropertyGroup):
         description="Bevel width",
         update=bevel_width_update
     )
+
+    export_scale_factor: FloatProperty(
+        name="Scale Factor",
+        min=0.0,
+        default=1.0,
+        description="Scale Factor for .stl export"
+    )

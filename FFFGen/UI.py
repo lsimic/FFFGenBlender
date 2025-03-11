@@ -218,5 +218,6 @@ class FFFGenExportPanel(Panel):
             sub.enabled = len(bpy.data.collections[constants.COLLECTION_FFF_GEN_MANDIBLE].objects) > 0
             sub.prop(properties, "export_toggle_reconstructed_mandible")
 
+            layout.prop(properties, "export_scale_factor") # scale factor for export.
             layout.prop(properties, "export_dir_path") # file path
             layout.operator("fff_gen.export_guides", text="Export") # export button
