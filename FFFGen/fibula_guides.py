@@ -21,7 +21,7 @@
 
 import bpy
 from .move_object_to_collection import move_object_to_collection
-from .external_loading import load_guide_cube
+from .external_loading import load_guide_cube, load_screw_hole_fibula
 from .bevel_worldspace import create_bevel_modifier
 from . import constants
 from . import materials
@@ -342,19 +342,14 @@ class CreateFibulaScrew(bpy.types.Operator):
 
 
 def create_fibula_screw_cylinder():
-    # create a cylinder object with correct scale
-    # correct name and correct display type-
-    diameter = bpy.context.scene.FFFGenPropertyGroup.screw_hole_diameter
-    radius = (diameter*0.1)*0.5
-    bpy.ops.mesh.primitive_cylinder_add(
-        radius=radius,
-        depth=4.0,
-        location=(0.0, 0.0, 0.0),
-        rotation=(0.0, math.radians(90.0), 0.0)
-    )
-    obj_screw_hole = bpy.context.active_object
+    # the loaded object has 1mm diameter, so it must be simply scaled on y and z axis by the diameter value.
+    obj_screw_hole = load_screw_hole_fibula()
+    bpy.context.view_layer.objects.active = obj_screw_hole
     obj_screw_hole.name = "fibula_guide_screw_hole"
     obj_screw_hole.display_type = "WIRE"
+    diameter = bpy.context.scene.FFFGenPropertyGroup.screw_hole_diameter
+    obj_screw_hole.scale[1] = diameter
+    obj_screw_hole.scale[2] = diameter
     return obj_screw_hole
 
 
