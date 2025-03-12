@@ -84,4 +84,23 @@ def load_positioning_aid_objects():
         if obj is not None:
             bpy.context.scene.collection.objects.link(obj)
 
-    return
+def load_screw_hole_mandible():
+    # loads the screw hole object.
+    directory = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(directory, "screw_hole.blend")
+    with bpy.data.libraries.load(file_path, link=False) as (data_from, data_to):
+        data_to.objects = [name for name in data_from.objects if name == "screw_hole_mandible"]
+    obj_screw_hole = data_to.objects[0]
+    bpy.context.scene.collection.objects.link(obj_screw_hole)
+    return obj_screw_hole
+
+def load_screw_hole_fibula():
+    # loads the screw hole object.
+    directory = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(directory, "screw_hole.blend")
+    with bpy.data.libraries.load(file_path, link=False) as (data_from, data_to):
+        data_to.objects = [name for name in data_from.objects if name == "screw_hole_fibula"]
+    obj_screw_hole = data_to.objects[0]
+    bpy.context.scene.collection.objects.link(obj_screw_hole)
+    return obj_screw_hole
+

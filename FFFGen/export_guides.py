@@ -29,12 +29,13 @@ def export_mesh_stl(context, object, full_file_path):
     objList = []
     objList.append(object)
     override["selected_objects"] = objList
+    properties = context.scene.FFFGenPropertyGroup
     with context.temp_override(**override):
         bpy.ops.export_mesh.stl(
             filepath=full_file_path, 
             check_existing=True,
             use_selection=True, 
-            global_scale=1.0, 
+            global_scale=properties.export_scale_factor, 
             use_scene_unit=False, 
             axis_forward="Y", 
             axis_up="Z"

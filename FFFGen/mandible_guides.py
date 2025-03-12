@@ -22,7 +22,7 @@
 import bpy
 import mathutils
 from .move_object_to_collection import move_object_to_collection
-from .external_loading import load_guide_cube, load_positioning_aid_objects
+from .external_loading import load_guide_cube, load_positioning_aid_objects, load_screw_hole_mandible
 from .bevel_worldspace import create_bevel_modifier
 from . import constants
 from . import materials
@@ -352,6 +352,12 @@ class CreateMandiblePositioningAid(bpy.types.Operator):
         obj_positioning_aid_curve_handle_start.matrix_world = pos_aid_matrix_start
         obj_positioning_aid_curve_handle_end.matrix_world = pos_aid_matrix_end
 
+        # add bevel to positioning aid
+        bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
+        bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
+        create_bevel_modifier(obj_positioning_aid_start, "fffgen_bevel_" + obj_positioning_aid_start.name, bevel_seg, bevel_width)
+        create_bevel_modifier(obj_positioning_aid_end, "fffgen_bevel_" + obj_positioning_aid_end.name, bevel_seg, bevel_width)
+
         # add boolean modifiers with the mandible objects where necessary (for start and end of positioning aid)
         # the rest of the booleans to merge the positioning aid together already exist on the curve object.
         modifier_difference_start = obj_positioning_aid_start.modifiers.new(
@@ -410,20 +416,15 @@ class CreateMandiblePositioningAid(bpy.types.Operator):
 
 
 def create_mandible_screw_cylinder(obj_mandible_guide, name):
-    diameter = bpy.context.scene.FFFGenPropertyGroup.screw_hole_diameter
-    radius = (diameter * 0.1) * 0.5
-    bpy.ops.mesh.primitive_cylinder_add(
-        radius=radius,
-        depth=4.0,
-        location=obj_mandible_guide.location,
-        rotation=(0.0, math.radians(90.0), 0.0)
-    )
-
-    # set the correct name, wire display
-    obj_screw_hole = bpy.context.active_object
+     # the loaded object has 1mm diameter, so it must be simply scaled on y and z axis by the diameter value.
+    obj_screw_hole = load_screw_hole_mandible()
+    bpy.context.view_layer.objects.active = obj_screw_hole
     obj_screw_hole.name = "mandible_guide_" + name + "_screw_hole"
     obj_screw_hole.display_type = "WIRE"
-
+    obj_screw_hole.location = obj_mandible_guide.location
+    diameter = bpy.context.scene.FFFGenPropertyGroup.screw_hole_diameter
+    obj_screw_hole.scale[1] = diameter
+    obj_screw_hole.scale[2] = diameter
     return obj_screw_hole
 
 
