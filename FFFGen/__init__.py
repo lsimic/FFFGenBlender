@@ -39,7 +39,7 @@ bl_info = {
     "name": "FFFGen",
     "description": "Fibula free flap guide generation",
     "author": "Luka Šimić, Vjekoslav Kopačin",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (3, 6, 2),
     "location": "View3D > Toolbox > FFF Gen",
     "wiki_url": "https://lsimic.github.io/FFFGen/",
