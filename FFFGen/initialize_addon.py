@@ -40,7 +40,7 @@ class InitializeAddon(bpy.types.Operator):
 
         remove_objects_and_collections()
         create_collections()
-        initialize_workspaces()
+        initialize_workspaces(context)
 
         # set active workspace to positioning
         bpy.context.window.workspace = bpy.data.workspaces[constants.WORKSPACE_POSITIONING]
@@ -85,7 +85,7 @@ def create_collections():
     bpy.context.scene.collection.children.link(bpy.data.collections.new(constants.COLLECTION_CUTTING_PLANES_FIBULA))
 
 
-def initialize_workspaces():
+def initialize_workspaces(context):
     # initialize workspaces by appending them from a file
     # for each workspace, find the appropriate space(spaceView3D)
     # set the "use_local_collections" flag
@@ -99,6 +99,7 @@ def initialize_workspaces():
         idname=constants.WORKSPACE_FIBULA_GUIDES,
         filepath=file_path
     )
+    print(file_path)
 
     for screen in bpy.data.workspaces[constants.WORKSPACE_FIBULA_GUIDES].screens:
         for area in screen.areas:
@@ -106,27 +107,29 @@ def initialize_workspaces():
                 if space.type == "VIEW_3D":
                     space.overlay.grid_scale = 0.01
                     space.use_local_collections = True
-                    override_context = {'window': bpy.context.window, 'screen': screen, 'area': area, 'workspace': bpy.data.workspaces[constants.WORKSPACE_FIBULA_GUIDES]}
+                    override_context = {'screen': screen, 'area': area, 'workspace': bpy.data.workspaces[constants.WORKSPACE_FIBULA_GUIDES]}
                     hidden_collections = [1, 3, 4, 5]
                     for collection_index in hidden_collections:
-                        bpy.ops.object.hide_collection(override_context, collection_index=collection_index, toggle=True)
-    
+                        with context.temp_override(**override_context):
+                            bpy.ops.object.hide_collection(collection_index=collection_index, toggle=True)
+
     bpy.ops.workspace.append_activate(
         idname=constants.WORKSPACE_MANDIBLE_GUIDES,
         filepath=file_path
     )
-    
+
     for screen in bpy.data.workspaces[constants.WORKSPACE_MANDIBLE_GUIDES].screens:
         for area in screen.areas:
             for space in area.spaces:
                 if space.type == "VIEW_3D":
                     space.overlay.grid_scale = 0.01
                     space.use_local_collections = True
-                    override_context = {'window': bpy.context.window, 'screen': screen, 'area': area, 'workspace': bpy.data.workspaces[constants.WORKSPACE_MANDIBLE_GUIDES]}
+                    override_context = {'screen': screen, 'area': area, 'workspace': bpy.data.workspaces[constants.WORKSPACE_MANDIBLE_GUIDES]}
                     hidden_collections = [1, 2, 3, 6, 7]
                     for collection_index in hidden_collections:
-                        bpy.ops.object.hide_collection(override_context, collection_index=collection_index, toggle=True)
-    
+                        with context.temp_override(**override_context):
+                            bpy.ops.object.hide_collection(collection_index=collection_index, toggle=True)
+
     bpy.ops.workspace.append_activate(
         idname=constants.WORKSPACE_POSITIONING,
         filepath=file_path
@@ -138,11 +141,12 @@ def initialize_workspaces():
                 if space.type == "VIEW_3D":
                     space.overlay.grid_scale = 0.01
                     space.use_local_collections = True
-                    override_context = {'window': bpy.context.window, 'screen': screen, 'area': area, 'workspace': bpy.data.workspaces[constants.WORKSPACE_POSITIONING]}
+                    override_context = {'screen': screen, 'area': area, 'workspace': bpy.data.workspaces[constants.WORKSPACE_POSITIONING]}
                     # check left/right area, change collection visibility as appropriate
                     if area.x > 0: # right area
                         hidden_collections = [3, 4, 5, 6, 7]
                     else:
                         hidden_collections = [2, 4, 5, 6, 7]
                     for collection_index in hidden_collections:
-                        bpy.ops.object.hide_collection(override_context, collection_index=collection_index, toggle=True)
+                        with context.temp_override(**override_context):
+                            bpy.ops.object.hide_collection(collection_index=collection_index, toggle=True)

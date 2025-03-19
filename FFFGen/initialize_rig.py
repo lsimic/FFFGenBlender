@@ -37,7 +37,7 @@ class InitializeRig(bpy.types.Operator):
     def invoke(self, context, event):
         # decimate objects if option is checked
         if(bpy.context.scene.FFFGenPropertyGroup.auto_decimate):
-            decimate_objects()
+            decimate_objects(context)
         
         # get original fibula and mandible object, store them in a separate collection...
         obj_mandible = bpy.context.scene.FFFGenPropertyGroup.mandible_object
@@ -59,7 +59,8 @@ class InitializeRig(bpy.types.Operator):
         override_context = {
             "selected_objects":[obj_mandible]
         }
-        bpy.ops.object.duplicate(override_context)
+        with context.temp_override(**override_context):
+            bpy.ops.object.duplicate()
         obj_mandible_copy = bpy.context.selected_objects[0]
         obj_mandible_copy.name = "mandible_copy"
         move_object_to_collection(
@@ -72,7 +73,8 @@ class InitializeRig(bpy.types.Operator):
         override_context = {
             "selected_objects":[obj_fibula]
         }
-        bpy.ops.object.duplicate(override_context)
+        with context.temp_override(**override_context):
+            bpy.ops.object.duplicate()
         obj_fibula_copy = bpy.context.selected_objects[0]
         obj_fibula_copy.name = "fibula_copy"
         move_object_to_collection(
@@ -90,11 +92,13 @@ class InitializeRig(bpy.types.Operator):
         boolean_objects = initialize_boolean_objects(armature)
         
         initialize_mandible_objects(
+            context=context,
             armature=armature,
             obj_mandible=obj_mandible_copy,
             objects_boolean_cubes=boolean_objects
         )
         initialize_fibula_objects(
+            context=context,
             armature=armature,
             obj_fibula=obj_fibula,
             objects_boolean_cubes=boolean_objects
@@ -124,7 +128,7 @@ class InitializeRig(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def decimate_objects():
+def decimate_objects(context):
     obj_mandible = bpy.context.scene.FFFGenPropertyGroup.mandible_object
     obj_fibula = bpy.context.scene.FFFGenPropertyGroup.fibula_object
 
@@ -142,7 +146,8 @@ def decimate_objects():
         override_context["active_object"] = obj
         override_context["selected_objects"] = [obj]
         override_context["object"] = obj
-        bpy.ops.object.modifier_apply(override_context, modifier=modifier_decimate.name)
+        with context.temp_override(**override_context):
+            bpy.ops.object.modifier_apply(modifier=modifier_decimate.name)
 
 
 def initialize_armature():
@@ -241,7 +246,7 @@ def initialize_boolean_objects(armature):
     return objects_boolean_cubes
 
 
-def initialize_mandible_objects(armature, obj_mandible, objects_boolean_cubes):
+def initialize_mandible_objects(context, armature, obj_mandible, objects_boolean_cubes):
     objects_mandible_boolean_cubes = dict()
     last_cube_name = "boolean_cube." + str(len(objects_boolean_cubes)-1)
     for obj_boolean_cube in objects_boolean_cubes.values():
@@ -250,7 +255,8 @@ def initialize_mandible_objects(armature, obj_mandible, objects_boolean_cubes):
         override_context = {
             "selected_objects":[obj_boolean_cube]
         }
-        bpy.ops.object.duplicate(override_context)
+        with context.temp_override(**override_context):
+            bpy.ops.object.duplicate()
         obj_boolean_cube_dupli = bpy.context.selected_objects[0]
         # scale up to avoid artifacts with boolean modifiers
         if obj_boolean_cube.name != last_cube_name:
@@ -266,7 +272,8 @@ def initialize_mandible_objects(armature, obj_mandible, objects_boolean_cubes):
     override_context = {
         "selected_objects":[obj_mandible]
     }
-    bpy.ops.object.duplicate(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.duplicate()
     obj_mandible_dupli = bpy.context.selected_objects[0]
     obj_mandible_dupli.select_set(False)
 
@@ -326,7 +333,7 @@ def initialize_fibula_vectors(segment_count, armature):
     return objects_vectors
 
 
-def initialize_fibula_duplis(obj_fibula, objects_vectors, objects_boolean_cubes):
+def initialize_fibula_duplis(context, obj_fibula, objects_vectors, objects_boolean_cubes):
     objects_fibula_duplis = dict()
 
     for counter in range(0, len(objects_vectors.values())):
@@ -337,7 +344,8 @@ def initialize_fibula_duplis(obj_fibula, objects_vectors, objects_boolean_cubes)
         override_context = {
             "selected_objects":[obj_fibula]
         }
-        bpy.ops.object.duplicate(override_context)
+        with context.temp_override(**override_context):
+            bpy.ops.object.duplicate()
         obj_fibula_dupli = bpy.context.selected_objects[0]
 
         # initial offset on y
@@ -384,7 +392,7 @@ def initialize_fibula_duplis(obj_fibula, objects_vectors, objects_boolean_cubes)
     return objects_fibula_duplis
 
 
-def initialize_fibula_objects(armature, obj_fibula, objects_boolean_cubes):
+def initialize_fibula_objects(context, armature, obj_fibula, objects_boolean_cubes):
     # initialize empties/vectors
     # they are used so the fibula fragments can be moved on local axes
     # without affecting orientation.
@@ -393,7 +401,7 @@ def initialize_fibula_objects(armature, obj_fibula, objects_boolean_cubes):
     objects_vectors = initialize_fibula_vectors(segment_count, armature)
 
     # initialize fibula duplicate objects(the ones affected by moving the armature bones)
-    objects_fibula_duplis = initialize_fibula_duplis(obj_fibula, objects_vectors, objects_boolean_cubes)
+    objects_fibula_duplis = initialize_fibula_duplis(context, obj_fibula, objects_vectors, objects_boolean_cubes)
 
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
