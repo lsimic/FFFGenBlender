@@ -36,7 +36,7 @@ class CreateMandibleGuides(bpy.types.Operator):
     bl_description = "Creates mandible guides and all necessary objects, modifiers and constraints"
 
     def invoke(self, context, event):
-        create_mandible_visualisation_copy()
+        create_mandible_visualisation_copy(context)
 
         # get mandible planes
         cutting_plane_mandible_end = bpy.data.objects["cutting_plane_mandible_end"]
@@ -186,7 +186,7 @@ def create_mandible_guide(obj_cutting_plane):
         obj_mandible_guide.data.materials.append(materials.get_guide())
 
 
-def create_mandible_visualisation_copy():
+def create_mandible_visualisation_copy(context):
     # create mandible copies used for better visualisation in the guide creation process
     obj_mandible = bpy.data.objects["mandible_copy"]
     obj_mandible_copy = bpy.data.objects["mandible_copy.001"]
@@ -197,7 +197,8 @@ def create_mandible_visualisation_copy():
     }
 
     # HACK: should make this better, not to reference objects using names(or at least better names...)
-    bpy.ops.object.duplicate(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.duplicate()
     move_object_to_collection(
         obj_to_move=bpy.data.objects["mandible_copy.002"],
         collection_name=constants.COLLECTION_GUIDE_MANDIBLE,

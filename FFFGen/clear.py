@@ -33,7 +33,7 @@ class ClearFibulaGuides(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        clear_fibula_guides()
+        clear_fibula_guides(context)
         return {"FINISHED"}
 
 
@@ -46,7 +46,7 @@ class ClearMandibleGuides(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
     
     def execute(self, context):
-        clear_mandible_guides()
+        clear_mandible_guides(context)
         return {"FINISHED"}
 
 
@@ -59,7 +59,7 @@ class ClearMandiblePositioningAid(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
     
     def execute(self, context):
-        clear_mandible_positioning_aid()
+        clear_mandible_positioning_aid(context)
         return {"FINISHED"}
 
 
@@ -72,9 +72,9 @@ class ClearCuttingPlanes(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        clear_fibula_guides()
-        clear_mandible_guides()
-        clear_cutting_planes()
+        clear_fibula_guides(context)
+        clear_mandible_guides(context)
+        clear_cutting_planes(context)
         return {"FINISHED"}
 
 
@@ -87,15 +87,15 @@ class ClearAll(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        clear_fibula_guides()
-        clear_mandible_guides()
-        clear_cutting_planes()
-        clear_fff_gen_objects()
+        clear_fibula_guides(context)
+        clear_mandible_guides(context)
+        clear_cutting_planes(context)
+        clear_fff_gen_objects(context)
         reset_collections()
         return {"FINISHED"}
 
 
-def clear_mandible_guides():
+def clear_mandible_guides(context):
     # deselect all selected objects
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
@@ -105,12 +105,13 @@ def clear_mandible_guides():
         "selected_objects":collection.objects
     }
     # delete using override context
-    bpy.ops.object.delete(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.delete()
     # set cutting plane visibility back
     bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_MANDIBLE].hide_viewport = False
 
 
-def clear_mandible_positioning_aid():
+def clear_mandible_positioning_aid(context):
     # deselect all selected objects
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
@@ -133,11 +134,12 @@ def clear_mandible_positioning_aid():
     }
 
     # delete using override context
-    bpy.ops.object.delete(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.delete()
 
 
-def clear_fibula_guides():
-     # deselect all selected objects
+def clear_fibula_guides(context):
+    # deselect all selected objects
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
     # get the collections, craete override context using collection objects
@@ -146,12 +148,13 @@ def clear_fibula_guides():
         "selected_objects":collection.objects
     }
     # delete using override context
-    bpy.ops.object.delete(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.delete()
     # set cutting plane visibility back
     bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_FIBULA].hide_viewport = False
 
 
-def clear_cutting_planes():
+def clear_cutting_planes(context):
     # deselect all selected objects
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
@@ -167,10 +170,11 @@ def clear_cutting_planes():
         "selected_objects":objects
     }
     # delete using override context
-    bpy.ops.object.delete(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.delete()
 
 
-def clear_fff_gen_objects():
+def clear_fff_gen_objects(context):
     # deselect all selected objects
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
@@ -186,7 +190,8 @@ def clear_fff_gen_objects():
         "selected_objects":objects
     }
     # delete using override context
-    bpy.ops.object.delete(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.delete()
 
 
 def reset_collections():

@@ -45,7 +45,7 @@ class AutoUpdateOperator(bpy.types.Operator):
                 if self.old_data != data:
                     print("Change detected")
                     self.old_data = data.copy()
-                    modal_invoke()
+                    modal_invoke(context)
                 else:
                     print("No change detected")
         return {"PASS_THROUGH"}
@@ -70,11 +70,11 @@ class Update(bpy.types.Operator):
     bl_description = "Updates fibula objects to fit the current positioning."
 
     def invoke(self, context, event):
-        modal_invoke()
+        modal_invoke(context)
         return {"FINISHED"}
 
 
-def modal_invoke():
+def modal_invoke(context):
     # preserve/track selected and active objects before modal execution
     obj_active_before = bpy.context.active_object
     mode_before = None
@@ -89,8 +89,8 @@ def modal_invoke():
         obj.select_set(False)
 
     # delete old duplicate objects and add new ones to proper locations
-    delete_old_duplis()
-    update_duplis()
+    delete_old_duplis(context)
+    update_duplis(context)
 
     # reset selection and mode to previous state
     for obj in objects_selected_before:
@@ -102,7 +102,7 @@ def modal_invoke():
         )
 
 
-def delete_old_duplis():
+def delete_old_duplis(context):
     # delete old fibula duplicates used for visualisation
     objects_to_delete = []
     for obj in bpy.data.objects:
@@ -111,10 +111,11 @@ def delete_old_duplis():
     override_context = {
         "selected_objects":objects_to_delete
     }
-    bpy.ops.object.delete(override_context)
+    with context.temp_override(**override_context):
+        bpy.ops.object.delete()
 
 
-def update_duplis():
+def update_duplis(context):
     # update fibula duplicates for visualisation
     # get all fibula graft objects
     objects_fibula = list()
@@ -132,7 +133,8 @@ def update_duplis():
         override_context = {
             "selected_objects":[obj_fibula]
         }
-        bpy.ops.object.duplicate(override_context)
+        with context.temp_override(**override_context):
+            bpy.ops.object.duplicate()
         obj_fibula_dupli = bpy.context.selected_objects[0]
 
         # apply modifiers to obj_fibula_dupli
