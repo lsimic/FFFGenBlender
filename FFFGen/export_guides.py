@@ -24,22 +24,33 @@ from bpy import context
 from . import constants
 
 def export_mesh_stl(context, object, full_file_path):
-    # set override context with the given object.
-    override = context.copy()
-    objList = []
-    objList.append(object)
-    override["selected_objects"] = objList
-    properties = context.scene.FFFGenPropertyGroup
-    with context.temp_override(**override):
-        bpy.ops.export_mesh.stl(
-            filepath=full_file_path, 
-            check_existing=True,
-            use_selection=True, 
-            global_scale=properties.export_scale_factor, 
-            use_scene_unit=False, 
-            axis_forward="Y", 
-            axis_up="Z"
-        )
+    # keep track of previously selected and active objects.
+    active_old = bpy.context.active_object
+    selected_old = bpy.context.selected_objects
+    # deselect all objects
+    for obj in bpy.data.objects:
+        obj.select_set(False)
+    # set object to export as active and selected
+    object.select_set(True)
+    bpy.context.view_layer.objects.active = object
+
+    # export object
+    bpy.ops.wm.stl_export(
+        filepath=full_file_path, 
+        check_existing=True,
+        export_selected_objects=True, 
+        global_scale=context.scene.FFFGenPropertyGroup.export_scale_factor, 
+        use_scene_unit=False, 
+        forward_axis="Y", 
+        up_axis="Z"
+    )
+
+    # deselect object to export
+    object.select_set(False)
+    # revert selection and active object to initial state.
+    bpy.context.view_layer.objects.active = active_old
+    for obj in selected_old:
+        obj.select_set(True)
 
     return
 
