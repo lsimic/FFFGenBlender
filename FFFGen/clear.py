@@ -89,6 +89,7 @@ class ClearAll(bpy.types.Operator):
     def execute(self, context):
         clear_fibula_guides(context)
         clear_mandible_guides(context)
+        clear_mandible_positioning_aid(context)
         clear_cutting_planes(context)
         clear_fff_gen_objects(context)
         reset_collections()
