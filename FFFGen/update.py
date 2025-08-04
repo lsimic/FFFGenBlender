@@ -75,31 +75,10 @@ class Update(bpy.types.Operator):
 
 
 def modal_invoke(context):
-    # preserve/track selected and active objects before modal execution
-    obj_active_before = bpy.context.active_object
-    mode_before = None
-    if bpy.context.active_object:
-        mode_before = bpy.context.active_object.mode
-        bpy.ops.object.mode_set(
-            mode="OBJECT"
-        )
-    objects_selected_before = list()
-    for obj in bpy.context.selected_objects:
-        objects_selected_before.append(obj)
-        obj.select_set(False)
 
     # delete old duplicate objects and add new ones to proper locations
     delete_old_duplis(context)
     update_duplis(context)
-
-    # reset selection and mode to previous state
-    for obj in objects_selected_before:
-        obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj_active_before
-    if mode_before:
-        bpy.ops.object.mode_set(
-            mode=mode_before
-        )
 
 
 def delete_old_duplis(context):
@@ -108,12 +87,9 @@ def delete_old_duplis(context):
     for obj in bpy.data.objects:
         if obj.name.startswith("fibula_dupli."):
             objects_to_delete.append(obj)
-    override_context = {
-        "selected_objects":objects_to_delete
-    }
-    with context.temp_override(**override_context):
-        bpy.ops.object.delete()
 
+    for obj in objects_to_delete:
+        bpy.data.objects.remove(obj, do_unlink=True)
 
 def update_duplis(context):
     # update fibula duplicates for visualisation
@@ -129,29 +105,25 @@ def update_duplis(context):
         fibula_orig = None
 
     for obj_fibula in objects_fibula:
-        # duplicate fibula obj.
-        override_context = {
-            "selected_objects":[obj_fibula]
-        }
-        with context.temp_override(**override_context):
-            bpy.ops.object.duplicate()
-        obj_fibula_dupli = bpy.context.selected_objects[0]
+        # copy fibula object
+        obj_fibula_dupli = obj_fibula.copy()
+        obj_fibula_dupli.data = obj_fibula.data.copy()
+        obj_fibula_dupli.name = "fibula_dupli." + obj_fibula.name[14:]
+        bpy.context.scene.collection.objects.link(obj_fibula_dupli)
 
         # apply modifiers to obj_fibula_dupli
-        bpy.context.view_layer.objects.active = obj_fibula_dupli
-        bpy.ops.object.modifier_apply(
-            modifier=obj_fibula_dupli.modifiers[0].name
-        )
+        with context.temp_override(selected_objects=[obj_fibula_dupli], active_object=obj_fibula_dupli, object=obj_fibula_dupli):
+            bpy.ops.object.modifier_apply(
+                modifier=obj_fibula_dupli.modifiers[0].name
+            )
         # remove constraints from dupli and reset location and rotation
-        bpy.ops.object.constraints_clear()
+        obj_fibula_dupli.constraints.clear()
         if fibula_orig is not None:
             obj_fibula_dupli.location = fibula_orig.location
             obj_fibula_dupli.rotation_euler = fibula_orig.rotation_euler
         else:
             obj_fibula_dupli.location = (0.0, 0.0, 0.0)
             obj_fibula_dupli.rotation_euler = (0.0, 0.0, 0.0)
-        fibula_dupli_name = "fibula_dupli." + obj_fibula.name[14:]
-        obj_fibula_dupli.name = fibula_dupli_name
 
         # move ob_dupli to proper layer
         move_object_to_collection(
@@ -159,7 +131,3 @@ def update_duplis(context):
             collection_name=constants.COLLECTION_FFF_GEN_FIBULA,
             remove_from_current=True
         )
-
-        # deselect all
-        for obj in bpy.context.selected_objects:
-            obj.select_set(False)
