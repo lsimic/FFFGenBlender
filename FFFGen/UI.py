@@ -49,7 +49,7 @@ class FFFGenGeneralPanel(Panel):
                     icon="OBJECT_DATA",
                     text="Fibula object"
                 )
-                if(properties.fibula_message):
+                if properties.fibula_message:
                     box.label(text=properties.fibula_message, icon="ERROR")
                 box.prop_search(
                     data=properties,
@@ -59,8 +59,16 @@ class FFFGenGeneralPanel(Panel):
                     icon="OBJECT_DATA",
                     text="Mandible object"
                 )
-                if(properties.mandible_message):
+                if properties.mandible_message:
                     box.label(text=properties.mandible_message, icon="ERROR")
+                box.prop_search(
+                    data=properties,
+                    property="additional_mandible_object",
+                    search_data=context.scene,
+                    search_property="objects",
+                    icon="OBJECT_DATA",
+                    text="Additional mandible object"
+                )
                 box.prop(properties, "segment_count")
                 box.prop(properties, "auto_decimate")
                 box = layout.box()
@@ -77,6 +85,19 @@ class FFFGenGeneralPanel(Panel):
         else:
             box = layout.box()
             box.operator("fff_gen.initialize_addon", text="Initialize Add-On")
+        
+        if bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES or bpy.context.window.workspace.name == constants.WORKSPACE_POSITIONING:
+            additional_mandible_object = None
+            if bpy.data.objects.find("additional_mandible_copy") >= 0:
+                additional_mandible_object = bpy.data.objects["additional_mandible_copy"]
+            if additional_mandible_object:
+                box = layout.box()
+                box.label(text="Additional Mandible Object")
+                box.prop(additional_mandible_object, "hide_viewport")
+                box.prop(additional_mandible_object, "hide_render")
+                if hasattr(additional_mandible_object.data, "materials"):
+                    if len(additional_mandible_object.data.materials):
+                        box.prop(additional_mandible_object.data.materials[0], "diffuse_color")
 
 
 class FFFGenGuidesPanel(Panel):
@@ -91,34 +112,39 @@ class FFFGenGuidesPanel(Panel):
         layout = self.layout
         properties = context.scene.FFFGenPropertyGroup
 
-        if properties.is_initialized and bpy.context.window.workspace.name == constants.WORKSPACE_POSITIONING:
+        mandible_guide_initialized = bpy.data.objects.find("mandible_guide_start") >= 0
+        is_mandible_workspace = bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES
+        fibula_guide_initialized = bpy.data.objects.find("fibula_guide") >= 0
+        is_fibula_workspace = bpy.context.window.workspace.name == constants.WORKSPACE_FIBULA_GUIDES
+        is_positioning_workspace = bpy.context.window.workspace.name == constants.WORKSPACE_POSITIONING
+
+        if properties.is_initialized and is_positioning_workspace:
             if not len(bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_MANDIBLE].objects) and len(bpy.data.collections[constants.COLLECTION_FFF_GEN_FIBULA].objects):
                 box = layout.box()
                 box.label(text="cutting planes:")
                 box.prop(properties, "cutting_plane_thickness")
                 box.operator("fff_gen.initialize_cutting_planes", text="Generate cutting planes")
 
-        if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES or bpy.context.window.workspace.name == constants.WORKSPACE_FIBULA_GUIDES):
-            if ((len(bpy.data.collections[constants.COLLECTION_GUIDE_FIBULA].objects) and bpy.context.window.workspace.name == constants.WORKSPACE_FIBULA_GUIDES)
-            or (len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects) and bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES)):
+        if properties.is_initialized and (is_fibula_workspace or is_mandible_workspace):
+            if (fibula_guide_initialized and is_fibula_workspace) or (mandible_guide_initialized and is_mandible_workspace):
                 box = layout.box()
                 box.label(text="settings:")
                 box.prop(properties, "screw_hole_diameter")
 
-        if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_FIBULA_GUIDES):
+        if properties.is_initialized and is_fibula_workspace:
             box = layout.box()
             box.label(text="Fibula Guides:")
-            if not len(bpy.data.collections[constants.COLLECTION_GUIDE_FIBULA].objects):
+            if not fibula_guide_initialized:
                 if len(bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_FIBULA].objects):
                     box.operator("fff_gen.create_fibula_guide", text="Generate Fibula guide")
             else:
                 box.operator("fff_gen.create_fibula_screw", text="Create Fibula guide screw")
 
-        if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES):
+        if properties.is_initialized and is_mandible_workspace:
             layout.prop(properties, "positioning_aid_toggle")
             box = layout.box()
             box.label(text="Mandible Guides:")
-            if not len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
+            if not mandible_guide_initialized:
                 if len(bpy.data.collections[constants.COLLECTION_CUTTING_PLANES_MANDIBLE].objects):
                     box.operator("fff_gen.create_mandible_guides", text="Create Mandible Guides")
             else:
@@ -158,7 +184,7 @@ class FFFGenDangerPanel(Panel):
         
         if properties.is_initialized and (bpy.context.window.workspace.name == constants.WORKSPACE_MANDIBLE_GUIDES):
             if properties.positioning_aid_toggle == "GUIDE":
-                if len(bpy.data.collections[constants.COLLECTION_GUIDE_MANDIBLE].objects):
+                if bpy.data.objects.find("mandible_guide_start") >= 0:
                     col.operator("fff_gen.clear_mandible_guides", text="Clear Mandible Guides")
             else:
                 if "positioning_aid_mesh" in bpy.data.objects.keys():

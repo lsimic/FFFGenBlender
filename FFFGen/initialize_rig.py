@@ -52,6 +52,40 @@ class InitializeRig(bpy.types.Operator):
             collection_name=constants.COLLECTION_ORIGINAL,
             remove_from_current=True
         )
+
+        # get original additional mandible object and store it in the extra collection
+        obj_mandible_additional = bpy.context.scene.FFFGenPropertyGroup.additional_mandible_object
+        if obj_mandible_additional:
+            move_object_to_collection(
+                obj_to_move=obj_mandible_additional,
+                collection_name=constants.COLLECTION_ORIGINAL,
+                remove_from_current=True
+            )
+            # duplicate additional mandible object.   
+            for obj in bpy.context.selected_objects:
+                obj.select_set(False)
+            override_context = {
+                "selected_objects":[obj_mandible_additional]
+            }
+            with context.temp_override(**override_context):
+                bpy.ops.object.duplicate()
+            obj_mandible_additional_copy = bpy.context.selected_objects[0]
+            obj_mandible_additional_copy.name = "additional_mandible_copy"
+            move_object_to_collection(
+                obj_to_move=obj_mandible_additional_copy,
+                collection_name=constants.COLLECTION_FFF_GEN_MANDIBLE,
+                remove_from_current=True
+            )
+            move_object_to_collection(
+                obj_to_move=obj_mandible_additional_copy,
+                collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+                remove_from_current=False
+            )
+            #set materials
+            if len(obj_mandible_additional_copy.data.materials):
+                obj_mandible_additional_copy.data.materials[0] = materials.get_additional_object()
+            else:
+                obj_mandible_additional_copy.data.materials.append(materials.get_additional_object())
         
         # duplicate fibula and mandible
         for obj in bpy.context.selected_objects:
@@ -131,14 +165,17 @@ class InitializeRig(bpy.types.Operator):
 def decimate_objects(context):
     obj_mandible = bpy.context.scene.FFFGenPropertyGroup.mandible_object
     obj_fibula = bpy.context.scene.FFFGenPropertyGroup.fibula_object
+    obj_mandible_additional = bpy.context.scene.FFFGenPropertyGroup.additional_mandible_object
 
-    for obj in [obj_mandible, obj_fibula]:
+    for obj in [obj_mandible, obj_fibula, obj_mandible_additional]:
+        if obj is None:
+            continue
         modifier_decimate = obj.modifiers.new(
             name="decimate",
             type="DECIMATE"
         )
         modifier_decimate.decimate_type = "COLLAPSE"
-        ratio = 10000/len(obj.data.polygons)
+        ratio = 10000 / len(obj.data.polygons)
         if (ratio > 1):
             ratio = 1
         modifier_decimate.ratio = ratio

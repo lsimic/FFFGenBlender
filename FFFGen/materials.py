@@ -31,6 +31,13 @@ def get_transparent():
         mat.diffuse_color = (1, 1, 1, 0.5)
     return mat
 
+def get_additional_object():
+    mat = bpy.data.materials.get("AdditionalObject")
+    if mat is None:
+        # create material
+        mat = bpy.data.materials.new(name="AdditionalObject")
+        mat.diffuse_color = (1.0, 0.8, 0.8, 0.5)
+    return mat
 
 def get_fibula(index):
     mat = bpy.data.materials.get("Fibula" + str(index))

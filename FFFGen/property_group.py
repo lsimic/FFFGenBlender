@@ -29,7 +29,7 @@ class FFFGenPropertyGroup(PropertyGroup):
         obj = bpy.context.scene.FFFGenPropertyGroup.fibula_object
         message = ""
         # Y axis should be the longest if oriented properly
-        if(obj):
+        if obj:
             if(obj.dimensions.y < obj.dimensions.z or obj.dimensions.y < obj.dimensions.x):
                 message += "Possible incorrect orientation!  "
             # values between 25 and 70 represent a reasonable size(in cm) for a human fibula + some extra
@@ -44,7 +44,7 @@ class FFFGenPropertyGroup(PropertyGroup):
     def mandible_update(self, context):
         obj = bpy.context.scene.FFFGenPropertyGroup.mandible_object
         message = ""
-        if (obj):
+        if obj:
             # values between 19 and 35 represent a reasonable size(in cm) for a human fibula + some extra
             # if the size falls out of this range, a warning will be raised.
             # this means that likely, an error occured during the imperial to metric conversion
@@ -173,6 +173,12 @@ class FFFGenPropertyGroup(PropertyGroup):
         description="Select whether to edit the mandible guide or positioning aid",
         default="GUIDE",
         update=positioning_aid_toggle_update
+    )
+
+    additional_mandible_object: PointerProperty(
+        type=bpy.types.Object,
+        name="Additional Mandible object",
+        description="Additional mandible object (eg. teeth)."
     )
 
     def positioning_aid_size_x_set_val(self, value):
