@@ -61,7 +61,7 @@ def create_mandible_guide_diff_obj(obj_cutting_plane, name):
 
     # rename the obj_diff, set display to wire, apply some initial scale
     obj_boolean_diff.name = "mandible_guide_" + name + "_difference"
-    obj_boolean_diff.display_type = "WIRE"
+    obj_boolean_diff.display_type = "BOUNDS"
     obj_boolean_diff.scale = (1.5, 1.0, 1.2)
     obj_boolean_diff.select_set(False)
 
@@ -88,7 +88,7 @@ def setup_main_mandible_guide(obj_mandible_guide):
 
 
 def setup_union_mandible_guide(obj_boolean_union, obj_mandible_guide):
-    obj_boolean_union.display_type = "WIRE"
+    obj_boolean_union.display_type = "BOUNDS"
 
     # give some initial scale and location
     obj_boolean_union.location[0] = -0.8

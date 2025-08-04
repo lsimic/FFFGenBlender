@@ -205,7 +205,7 @@ def create_obj_boolean_union_limit(obj_fibula_guide):
     )
 
     # display wireframe...
-    obj_boolean_union_limit.display_type = "WIRE"
+    obj_boolean_union_limit.display_type = "BOUNDS"
     obj_boolean_union_limit.name = "fibula_guide_union_limit"
 
     move_object_to_collection(
@@ -239,7 +239,7 @@ def create_boj_boolean_difference_limit(obj_fibula_guide):
     )
 
     # display wireframe...
-    obj_boolean_difference_limit.display_type = "WIRE"
+    obj_boolean_difference_limit.display_type = "BOUNDS"
     obj_boolean_difference_limit.name = "fibula_guide_difference_limit"
     move_object_to_collection(
         obj_to_move=obj_boolean_difference_limit,
