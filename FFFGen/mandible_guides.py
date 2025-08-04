@@ -428,15 +428,6 @@ def create_mandible_screw_cylinder(obj_mandible_guide, name):
     obj_screw_hole.scale[2] = diameter
     return obj_screw_hole
 
-
-def setup_mandible_screw_constraints(obj_mandible_guide, obj_screw_hole):
-    constraint_copy_rotation = obj_screw_hole.constraints.new(
-        type="COPY_ROTATION"
-    )
-    constraint_copy_rotation.target = obj_mandible_guide
-    obj_screw_hole.select_set(False)
-
-
 def setup_mandible_screw_modifiers(obj_mandible_guide, obj_positioning_aid, obj_screw_hole):
     # add boolean modifier to mandible guide
     obj_mandible_guide.select_set(True)
@@ -477,7 +468,9 @@ def create_mandible_screw(obj_mandible_guide, obj_positioning_aid, name):
         scale=False
     )
 
-    setup_mandible_screw_constraints(obj_mandible_guide, obj_screw_hole)
+    # copy initial rotation
+    obj_screw_hole.rotation_euler = obj_mandible_guide.rotation_euler
+    obj_screw_hole.select_set(False)
 
     # add boolean modifier (difference) to mandible guide, using the cylinder as the target
     setup_mandible_screw_modifiers(obj_mandible_guide, obj_positioning_aid, obj_screw_hole)

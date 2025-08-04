@@ -324,7 +324,8 @@ class CreateFibulaScrew(bpy.types.Operator):
             scale=False
         )
 
-        setup_screw_hole_constraint(obj_screw_hole, obj_fibula_guide)
+        obj_screw_hole.rotation_euler = obj_fibula_guide.rotation_euler
+        obj_screw_hole.select_set(False)
         setup_screw_hole_modifiers(obj_screw_hole, obj_fibula_guide)
 
         # move to proper collection
@@ -351,15 +352,6 @@ def create_fibula_screw_cylinder():
     obj_screw_hole.scale[1] = diameter
     obj_screw_hole.scale[2] = diameter
     return obj_screw_hole
-
-
-def setup_screw_hole_constraint(obj_screw_hole, obj_fibula_guide):
-    # add copy rotation constraint so the screw is aligned and perpendicular
-    constraint_copy_rotation = obj_screw_hole.constraints.new(
-        type="COPY_ROTATION"
-    )
-    constraint_copy_rotation.target = obj_fibula_guide
-    obj_screw_hole.select_set(False)
 
 
 def setup_screw_hole_modifiers(obj_screw_hole, obj_fibula_guide):
