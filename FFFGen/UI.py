@@ -153,6 +153,9 @@ class FFFGenGuidesPanel(Panel):
                 if properties.positioning_aid_toggle == "GUIDE":
                     if not "joined_mandible_guide" in bpy.data.objects.keys():
                         box.operator("fff_gen.join_mandible_guides", text="Join mandible guides")
+                    else:
+                        box.prop(properties, "mandible_join_size_x")
+                        box.prop(properties, "mandible_join_size_z")
                 else:
                     # try to find the positioning aid object
                     # if found - it is initialized
@@ -163,7 +166,6 @@ class FFFGenGuidesPanel(Panel):
                         # Property to adjust scale/thickness
                         box.prop(properties, "positioning_aid_size_x")
                         box.prop(properties, "positioning_aid_size_z")
-
 
 class FFFGenDangerPanel(Panel):
     bl_idname = "FFF_GEN_PT_danger"

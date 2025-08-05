@@ -22,7 +22,7 @@
 import bpy
 import mathutils
 from .move_object_to_collection import move_object_to_collection
-from .external_loading import load_guide_cube, load_positioning_aid_objects, load_screw_hole_mandible
+from .external_loading import load_guide_cube, load_positioning_aid_objects, load_screw_hole_mandible, load_mandible_join_objects
 from .bevel_worldspace import create_bevel_modifier
 from . import constants
 from . import materials
@@ -253,7 +253,7 @@ class JoinMandibleGuides(bpy.types.Operator):
         obj_guide_end = bpy.data.objects["mandible_guide_end"]
         obj_mandible = bpy.context.scene.FFFGenPropertyGroup.mandible_object
 
-        obj_guide = create_mandible_guide_join_cube(obj_guide_start, obj_guide_end)
+        obj_guide = create_mandible_guide_join_element(obj_guide_start, obj_guide_end)
         setup_mandible_joined_modifiers(obj_guide_start, obj_guide_end, obj_mandible, obj_guide)
 
         # set material
@@ -487,43 +487,52 @@ def create_mandible_screw(obj_mandible_guide, obj_positioning_aid, name):
     bpy.context.view_layer.objects.active = obj_screw_hole
 
 
-def create_mandible_guide_join_cube(obj_guide_start, obj_guide_end):
-    # create a cube, at center point between objects
-    co = (obj_guide_end.location + obj_guide_start.location) / 2
-    bpy.ops.mesh.primitive_cube_add(size=1.0, enter_editmode=False, location=co)
-    obj_guide = bpy.context.active_object
-    obj_guide.name = "joined_mandible_guide"
-    # offset it on z axis lower
-    z_dist = (obj_guide_start.dimensions[2] + obj_guide_end.dimensions[2]) / 4
-    obj_guide.location[2] -= z_dist
+def create_mandible_guide_join_element(obj_guide_start, obj_guide_end):
+
+    load_mandible_join_objects()
+    obj_guide_curve = bpy.data.objects["mandible_join_curve"]
+    obj_guide_mesh = bpy.data.objects["mandible_join_mesh"]
+    obj_handle_start = bpy.data.objects["mandible_join_handle_start"]
+    obj_handle_end = bpy.data.objects["mandible_join_handle_end"]
+    obj_guide_mesh.name = "joined_mandible_guide"
 
     # move to proper collection
     move_object_to_collection(
-        obj_to_move=obj_guide,
+        obj_to_move=obj_guide_curve,
+        collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+        remove_from_current=True
+    )
+    move_object_to_collection(
+        obj_to_move=obj_guide_mesh,
+        collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+        remove_from_current=True
+    )
+    move_object_to_collection(
+        obj_to_move=obj_handle_start,
+        collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
+        remove_from_current=True
+    )
+    move_object_to_collection(
+        obj_to_move=obj_handle_end,
         collection_name=constants.COLLECTION_GUIDE_MANDIBLE,
         remove_from_current=True
     )
 
-    # calculate distance between start and end guides
-    dist = (obj_guide_start.location - obj_guide_end.location).length
-    obj_guide.scale[0] = 1.1 * dist
-    obj_guide.scale[1] = 0.2 * dist
-    obj_guide.scale[2] = 0.1 * dist
+    # set handle positions
+    obj_handle_start.matrix_world = obj_guide_start.matrix_world
+    matrix_start_inv = obj_handle_start.matrix_world.copy()
+    matrix_start_inv.invert()
+    obj_handle_start.location = obj_handle_start.location + (mathutils.Vector((-1.0, -0.5, 0.0)) @ matrix_start_inv)
 
-    # set initial rotation to follow the line between two guides
-    vec_1 = obj_guide_start.location - obj_guide_end.location
-    vec_1.normalize()
-    obj_guide.rotation_euler = vec_1.to_track_quat('X', 'Z').to_euler()
+    obj_handle_end.matrix_world = obj_guide_end.matrix_world
+    matrix_end_inv = obj_handle_end.matrix_world.copy()
+    matrix_end_inv.invert()
+    obj_handle_end.location = obj_handle_end.location + (mathutils.Vector((-1.0, 0.5, 0.0)) @ matrix_start_inv)
 
-    return obj_guide
+    return obj_guide_mesh
 
 
 def setup_mandible_joined_modifiers(obj_guide_start, obj_guide_end, obj_mandible, obj_guide):
-    # mandible guide bevel...
-    bevel_seg = bpy.context.scene.FFFGenPropertyGroup.bevel_segmentcount
-    bevel_width = bpy.context.scene.FFFGenPropertyGroup.bevel_width
-    create_bevel_modifier(obj_guide, "fffgen_bevel_" + obj_guide.name, bevel_seg, bevel_width)
-
     # add bolean modifier difference(with mandible)
     mod_difference = obj_guide.modifiers.new(
         name="boolean_difference",

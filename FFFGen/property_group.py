@@ -202,8 +202,46 @@ class FFFGenPropertyGroup(PropertyGroup):
             obj = bpy.data.objects["positioning_aid_mesh"]
             return obj.scale[2]
         return 0.0
+    
+    def mandible_join_size_x_set_val(self, value):
+        if "joined_mandible_guide" in bpy.data.objects.keys():
+            obj = bpy.data.objects["joined_mandible_guide"]
+            obj.scale[0] = value
+
+    def mandible_join_size_z_set_val(self, value):
+        if "joined_mandible_guide" in bpy.data.objects.keys():
+            obj = bpy.data.objects["joined_mandible_guide"]
+            obj.scale[2] = value
+
+    def mandible_join_size_x_get_val(self):
+        if "joined_mandible_guide" in bpy.data.objects.keys():
+            obj = bpy.data.objects["joined_mandible_guide"]
+            return obj.scale[0]
+        return 0.0
+    
+    def mandible_join_size_z_get_val(self):
+        if "joined_mandible_guide" in bpy.data.objects.keys():
+            obj = bpy.data.objects["joined_mandible_guide"]
+            return obj.scale[2]
+        return 0.0
 
     # NOTE: z and x (height and width) are swapped here due to how the mesh is deformed by the spline.
+
+    mandible_join_size_z: FloatProperty(
+        name="Mandible join element width",
+        default=0.2,
+        description="Thickness of the mandible join element (in Z direction)",
+        get = mandible_join_size_z_get_val,
+        set = mandible_join_size_z_set_val
+    )
+
+    mandible_join_size_x: FloatProperty(
+        name="Mandible join element height",
+        default=0.2,
+        description="Thickness of the mandible join element (in X direction)",
+        get = mandible_join_size_x_get_val,
+        set = mandible_join_size_x_set_val
+    )
 
     positioning_aid_size_z: FloatProperty(
         name="Positioning aid width",

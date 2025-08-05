@@ -104,3 +104,16 @@ def load_screw_hole_fibula():
     bpy.context.scene.collection.objects.link(obj_screw_hole)
     return obj_screw_hole
 
+def load_mandible_join_objects():
+    # loads the objects needed to construct the mandible joining element
+    # they are stored in the file with correct names...
+    directory = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(directory, "mandible_join_element.blend")
+
+    with bpy.data.libraries.load(file_path, link=False) as (data_from, data_to):
+        data_to.objects = [name for name in data_from.objects]
+
+    for obj in data_to.objects:
+        if obj is not None:
+            bpy.context.scene.collection.objects.link(obj)
+
