@@ -31,6 +31,7 @@ def export_mesh_stl(context, object, full_file_path):
     for obj in bpy.data.objects:
         obj.select_set(False)
     # set object to export as active and selected
+
     object.select_set(True)
     bpy.context.view_layer.objects.active = object
 
@@ -63,13 +64,17 @@ def export_fibula_guide(context, full_file_path):
 def export_mandible_guide(context, full_file_path):
     if "joined_mandible_guide" in bpy.data.objects.keys():
         obj = bpy.data.objects["joined_mandible_guide"]
+        obj.hide_select = False
         export_mesh_stl(context, obj, full_file_path)
+        obj.hide_select = True
     return
 
 def export_mandible_positioning_aid(context, full_file_path):
     if "positioning_aid_mesh" in bpy.data.objects.keys():
         obj = bpy.data.objects["positioning_aid_mesh"]
+        obj.hide_select = False
         export_mesh_stl(context, obj, full_file_path)
+        obj.hide_select = True
     return
 
 # small helper function for object duplication
