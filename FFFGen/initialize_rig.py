@@ -388,7 +388,7 @@ def initialize_fibula_duplis(context, obj_fibula, objects_vectors, objects_boole
         # initial offset on y
         bpy.context.view_layer.objects.active = obj_fibula_dupli
         bpy.ops.transform.translate(
-            value=(0.0, counter * (-3.0), 0.0),
+            value=(0.0, counter * (-0.5), 0.0),
             constraint_axis=(False, True, False),
             orient_type='LOCAL'
         )
